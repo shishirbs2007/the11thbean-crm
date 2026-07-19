@@ -1,7 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import { expect, test } from "@playwright/test";
 
-const orderReference = `E2E-${Date.now()}`;
+const timestamp = Date.now();
+const orderReference = `E2E-${timestamp}`;
+const customerEmail = `visit-e2e-${timestamp}@example.com`;
+let personId = "";
 
 function adminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -22,6 +25,29 @@ function adminClient() {
 }
 
 test.describe.serial("Visit lifecycle", () => {
+  test.beforeAll(async () => {
+    const admin = adminClient();
+
+    const { data, error } = await admin
+      .from("people")
+      .insert({
+        first_name: `Visit${timestamp}`,
+        last_name: "Regression",
+        email: customerEmail,
+        person_type: "customer",
+        customer_status: "new",
+        is_active: true,
+      })
+      .select("id")
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    personId = data.id;
+  });
+
   test.afterAll(async () => {
     const admin = adminClient();
 
@@ -38,14 +64,35 @@ test.describe.serial("Visit lifecycle", () => {
         .eq("source_id", visit.id);
 
       await admin
+        .from("visit_items")
+        .delete()
+        .eq("visit_id", visit.id);
+
+      await admin
         .from("visits")
         .delete()
         .eq("id", visit.id);
     }
+
+    if (personId) {
+      await admin
+        .from("timeline_entries")
+        .delete()
+        .eq("person_id", personId);
+
+      await admin
+        .from("people")
+        .delete()
+        .eq("id", personId);
+    }
   });
 
-  test("record and open a guest visit", async ({ page }) => {
+  test("record and open a customer visit", async ({ page }) => {
     await page.goto("/visits");
+
+    await page
+      .locator('select[name="person_id"]')
+      .selectOption(personId);
 
     await page
       .getByPlaceholder("Gross amount")

@@ -105,7 +105,7 @@ test.describe.serial("Customer lifecycle", () => {
       .click();
 
     await expect(
-      page.getByText(firstName, { exact: true }),
+      page.getByText(email, { exact: true }),
     ).toBeVisible();
   });
 });

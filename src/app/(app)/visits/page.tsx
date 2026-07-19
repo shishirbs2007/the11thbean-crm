@@ -330,9 +330,10 @@ export default async function VisitsPage({
           <form action={createVisit} className="mt-5 space-y-3">
             <select
               name="person_id"
+              required
               className="w-full rounded-xl border px-3 py-2"
             >
-              <option value="">Guest visit</option>
+              <option value="">Select customer</option>
               {people.map((person) => (
                 <option key={person.id} value={person.id}>
                   {displayName(person)}
