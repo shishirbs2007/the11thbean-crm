@@ -98,3 +98,9 @@ repair-11thbean-mvp.command
 *.command
 CUSTOMER360_BUILD_LOG_*.txt
 CUSTOMER360_BUILD_REPORT_*.txt
+
+# Customer 360 local tooling
+CUSTOMER360_BUILD_LOG_*.txt
+CUSTOMER360_BUILD_REPORT_*.txt
+build-11thbean-customer360.command
+.customer360-backups/

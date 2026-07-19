@@ -4,8 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 const links = [
   ["/dashboard", "Dashboard"],
   ["/customers", "Customers"],
+  ["/households", "Households"],
   ["/communities", "Communities"],
   ["/events", "Events"],
+  ["/insights", "Insights"],
   ["/settings", "Settings"],
 ];
 
