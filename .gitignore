@@ -66,3 +66,12 @@ next-env.d.ts
 .supabase
 *.log
 .DS_Store
+
+# The 11th Bean bootstrap
+.env
+.env.*
+!.env.example
+.vercel
+.supabase
+*.log
+.DS_Store
