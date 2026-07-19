@@ -1,0 +1,9 @@
+{
+  "preflight": true,
+  "postflight": true,
+  "pre_module": true,
+  "post_module": true,
+  "on_error": true,
+  "on_success": true,
+  "on_rollback": true
+}
