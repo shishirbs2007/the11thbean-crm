@@ -1,0 +1,16 @@
+{
+  "pipeline": [
+    "discover",
+    "preflight",
+    "repair",
+    "migrations",
+    "modules",
+    "build",
+    "validate",
+    "deploy",
+    "postflight"
+  ],
+  "resume_supported": true,
+  "rollback_supported": true,
+  "stop_on_failure": true
+}
