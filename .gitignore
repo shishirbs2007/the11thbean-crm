@@ -84,3 +84,8 @@ next-env.d.ts
 .supabase
 *.log
 .DS_Store
+
+# Local MVP repair tooling
+MVP_REPAIR_LOG_*.txt
+repair-11thbean-mvp.command
+.mvp-repair-backups/

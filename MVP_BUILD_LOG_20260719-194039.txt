@@ -1,0 +1,78 @@
+[H[2J[3J[1mThe 11th Bean Full MVP Builder[0m
+Version 1.0.0
+
+Project: /Users/shishir/Downloads/Shishir/Business_Ideas/Maison_Aranya/The11thBean/The_11th_Bean_CRM_Project/the11thbean-crm/the11thbean-crm
+
+[36m[INFO][0m Creating source backup...
+[32m[PASS][0m Backup created at /Users/shishir/Downloads/Shishir/Business_Ideas/Maison_Aranya/The11thBean/The_11th_Bean_CRM_Project/the11thbean-crm/the11thbean-crm/.mvp-backups/20260719-194039
+[36m[INFO][0m Installing required packages...
+
+up to date, audited 368 packages in 3s
+
+147 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+npm warn allow-scripts 2 packages have install scripts not yet covered by allowScripts:
+npm warn allow-scripts   sharp@0.34.5 (install: node install/check.js || npm run build)
+npm warn allow-scripts   unrs-resolver@1.12.2 (postinstall: node postinstall.js)
+npm warn allow-scripts
+npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
+Vercel CLI 56.3.1 (Node.js 26.5.0)
+! NEXT_PUBLIC_ variables can be seen by anyone visiting your site
+Retrieving project…
+Saving…
+
+✓ Added           NEXT_PUBLIC_SITE_URL
+  Project         shishirbs2026/the11thbean-crm
+  Environments    Production
+  Type            Sensitive
+Vercel CLI 56.3.1 (Node.js 26.5.0)
+! NEXT_PUBLIC_ variables can be seen by anyone visiting your site
+Retrieving project…
+  Leave empty to apply to all Preview branches.
+? Git branch?[15G
+[?25h[32m[PASS][0m Configured NEXT_PUBLIC_SITE_URL
+[36m[INFO][0m Applying database migration...
+Initialising login role...
+Connecting to remote database...
+Do you want to push these migrations to the remote database?
+ • 202607190002_full_mvp.sql
+
+ [Y/n] Applying migration 202607190002_full_mvp.sql...
+NOTICE (00000): trigger "people_set_updated_at" for relation "public.people" does not exist, skipping
+NOTICE (00000): trigger "external_identities_set_updated_at" for relation "public.external_identities" does not exist, skipping
+NOTICE (00000): trigger "preferences_set_updated_at" for relation "public.customer_preferences" does not exist, skipping
+Finished supabase db push.
+[32m[PASS][0m Database migration applied
+[36m[INFO][0m Running lint...
+
+> the11thbean-crm@0.1.0 lint
+> eslint
+
+[32m[PASS][0m Lint passed
+[36m[INFO][0m Running production build...
+
+> the11thbean-crm@0.1.0 build
+> next build
+
+▲ Next.js 16.2.10 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 1 errors:
+./src/app/customers
+You cannot have two parallel pages that resolve to the same path. Please check /(app)/customers and /customers.
+
+    at ignore-listed frames
+[31m[FAIL][0m Expansion stopped at line 1198, exit code 1.
+Backup: /Users/shishir/Downloads/Shishir/Business_Ideas/Maison_Aranya/The11thBean/The_11th_Bean_CRM_Project/the11thbean-crm/the11thbean-crm/.mvp-backups/20260719-194039
+Log: /Users/shishir/Downloads/Shishir/Business_Ideas/Maison_Aranya/The11thBean/The_11th_Bean_CRM_Project/the11thbean-crm/the11thbean-crm/MVP_BUILD_LOG_20260719-194039.txt
+The script can be rerun after the reported issue is resolved.
