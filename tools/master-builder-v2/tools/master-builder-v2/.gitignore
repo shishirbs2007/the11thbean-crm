@@ -1,0 +1,27 @@
+# Runtime
+runtime/*
+!runtime/.gitkeep
+
+# Cache
+cache/*
+!cache/.gitkeep
+
+# Logs
+logs/*
+!logs/.gitkeep
+
+# Output
+output/*
+!output/.gitkeep
+
+# Backups
+backups/
+
+# Reports
+reports/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+.DS_Store
