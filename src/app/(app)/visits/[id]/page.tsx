@@ -128,6 +128,12 @@ export default async function VisitPage({
           </p>
         </div>
 
+        {visit.order_reference && (
+  <p className="mt-2 text-sm text-neutral-500">
+    Order reference: {visit.order_reference}
+  </p>
+)}
+
         <form action={deleteAction}>
           <button className="rounded-2xl border border-red-300 px-5 py-3 text-sm text-red-700">
             Delete visit
