@@ -6,12 +6,19 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint src tests vitest.config.ts playwright.production.config.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:unit:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
     "test:public": "playwright test --config=playwright.production.config.ts --project=public",
     "test:auth": "playwright test --config=playwright.production.config.ts --project=authenticated",
     "test:e2e": "playwright test --config=playwright.production.config.ts",
     "test:db": "node tests/database/integrity.mjs",
     "test:report": "playwright show-report",
+    "validate": "bash ./validate-production.sh",
     "validate:production": "bash ./validate-production.sh"
   },
   "dependencies": {
@@ -37,12 +44,23 @@
   "devDependencies": {
     "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/supertest": "^6.0.3",
+    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/ui": "^4.1.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
+    "jsdom": "^29.1.1",
+    "msw": "^2.15.0",
+    "nyc": "^18.0.0",
+    "supertest": "^7.2.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }
