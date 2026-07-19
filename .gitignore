@@ -122,3 +122,15 @@ FULL_EXPANSION_LOG_*.txt
 FULL_EXPANSION_REPORT_*.txt
 build-11thbean-full-parallel-expansion.command
 .full-expansion-backups/
+
+# Local CRM build artifacts
+.crm-master-state/
+.full-expansion-v2-backups/
+COMPLETE_VALIDATION_LOG_*.txt
+COMPLETE_VALIDATION_REPORT_*.txt
+FULL_EXPANSION_V2_LOG_*.txt
+FULL_EXPANSION_V2_REPORT_*.txt
+crm-full-snapshot.txt
+crm-smoke-test.sh
+install-remaining-crm.sh
+crm-master-install.log
