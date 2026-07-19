@@ -41,6 +41,38 @@ function jsonList(value: JsonObject, key: string): string {
   return Array.isArray(item) ? item.join(", ") : "";
 }
 
+function numberValue(value: unknown): number {
+  return Number(value ?? 0);
+}
+
+function weekdayName(value: string | null | undefined): string {
+  const names = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  const index = Number(value);
+
+  return Number.isInteger(index) && index >= 0 && index <= 6
+    ? names[index]
+    : "Not enough data";
+}
+
+function daysSince(value: string | null | undefined): number | null {
+  if (!value) return null;
+
+  return Math.max(
+    0,
+    Math.floor(
+      (Date.now() - new Date(value).getTime()) / 86_400_000,
+    ),
+  );
+}
+
 export default async function CustomerPage({
   params,
   searchParams,
@@ -122,6 +154,11 @@ export default async function CustomerPage({
       .eq("person_id", id)
       .maybeSingle(),
     supabase
+      .from("customer_health")
+      .select("*")
+      .eq("person_id", id)
+      .maybeSingle(),
+    supabase
       .from("people")
       .select("id, first_name, last_name, preferred_name")
       .neq("id", id)
@@ -145,6 +182,7 @@ export default async function CustomerPage({
     milestonesResult,
     timelineResult,
     loyaltyResult,
+    healthResult,
     optionsResult,
   ] = results;
 
@@ -164,6 +202,7 @@ export default async function CustomerPage({
   const milestones = milestonesResult.data ?? [];
   const timeline = timelineResult.data ?? [];
   const loyalty = loyaltyResult.data;
+  const health = healthResult.data;
   const options = (optionsResult.data ?? []) as PersonName[];
 
   const errors = results.map((result) => result.error).filter(Boolean);
@@ -185,6 +224,43 @@ export default async function CustomerPage({
 
   const coffee = (hospitality?.coffee_preferences ?? {}) as JsonObject;
   const food = (hospitality?.food_preferences ?? {}) as JsonObject;
+
+  const relationshipScore = Math.min(
+    100,
+    visits.length * 4 +
+      referrals.length * 12 +
+      memberships.length * 8 +
+      registrations.length * 5 +
+      milestones.length * 4 +
+      relationships.length * 6,
+  );
+
+  const lastVisitDays = daysSince(health?.last_visit_at);
+  const favouriteDrink = jsonString(coffee, "drink");
+  const suggestions = [
+    ...(favouriteDrink
+      ? [`Offer their usual ${favouriteDrink} or a thoughtful variation.`]
+      : ["Ask what coffee style they usually enjoy."]),
+    ...((hospitality?.allergies || []).length > 0
+      ? [
+          `Double-check allergens before serving: ${(
+            hospitality?.allergies || []
+          ).join(", ")}.`,
+        ]
+      : []),
+    ...(lastVisitDays !== null && lastVisitDays >= 45
+      ? [
+          `Reconnect personally. Their last recorded visit was ${lastVisitDays} days ago.`,
+        ]
+      : []),
+    ...(referrals.length > 0
+      ? [
+          `Thank them for introducing ${referrals.length} customer${
+            referrals.length === 1 ? "" : "s"
+          }.`,
+        ]
+      : []),
+  ].slice(0, 5);
 
   return (
     <main className="mx-auto max-w-7xl px-5 py-10">
@@ -215,7 +291,52 @@ export default async function CustomerPage({
         </div>
       )}
 
+      <Section
+        title="Customer health"
+        description="Automatically calculated from recency, frequency, spend and relationship activity."
+      >
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            ["Health score", `${numberValue(health?.health_score).toFixed(0)}/100`],
+            ["Relationship score", `${relationshipScore.toFixed(0)}/100`],
+            ["Churn risk", `${numberValue(health?.churn_risk).toFixed(0)}%`],
+            ["Lifetime value", `₹${numberValue(health?.lifetime_value || spend).toFixed(0)}`],
+            ["Average ticket", `₹${numberValue(health?.average_ticket).toFixed(0)}`],
+            ["Favourite day", weekdayName(health?.preferred_visit_day)],
+            ["Favourite time", health?.preferred_visit_time || "Not enough data"],
+            [
+              "Last visit",
+              lastVisitDays === null
+                ? "No visit recorded"
+                : `${lastVisitDays} day${lastVisitDays === 1 ? "" : "s"} ago`,
+            ],
+          ].map(([label, value]) => (
+            <div key={label} className="rounded-2xl border p-5">
+              <p className="text-sm text-neutral-500">{label}</p>
+              <p className="mt-2 text-2xl font-semibold">{value}</p>
+            </div>
+          ))}
+        </div>
+      </Section>
+
       <div className="mt-8 grid gap-6 xl:grid-cols-2">
+        <Section
+          title="Hospitality suggestions"
+          description="Immediate actions based on the guest's live CRM history."
+        >
+          <ol className="space-y-3">
+            {suggestions.map((suggestion, index) => (
+              <li
+                key={suggestion}
+                className="flex gap-3 rounded-xl bg-neutral-50 p-4"
+              >
+                <span className="font-semibold">{index + 1}.</span>
+                <span>{suggestion}</span>
+              </li>
+            ))}
+          </ol>
+        </Section>
+
         <Section title="Identity and contact">
           <form action={update} className="grid gap-3 sm:grid-cols-2">
             <input name="first_name" required defaultValue={person.first_name} className="rounded-xl border px-3 py-2" />
