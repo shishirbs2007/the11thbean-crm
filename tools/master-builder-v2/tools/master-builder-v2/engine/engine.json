@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "engines": [
+    "discover",
+    "repair",
+    "migrate",
+    "deploy",
+    "validate",
+    "rollback",
+    "resume"
+  ],
+  "execution": "pipeline",
+  "parallel": false
+}
