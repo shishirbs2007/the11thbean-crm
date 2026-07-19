@@ -89,3 +89,6 @@ next-env.d.ts
 MVP_REPAIR_LOG_*.txt
 repair-11thbean-mvp.command
 .mvp-repair-backups/
+
+# Bean CLI local state
+.bean/
