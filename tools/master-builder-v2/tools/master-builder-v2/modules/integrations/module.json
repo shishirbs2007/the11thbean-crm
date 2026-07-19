@@ -1,0 +1,9 @@
+{
+  "name":"integrations",
+  "enabled":true,
+  "installed":false,
+  "version":"1.0.0",
+  "dependencies":[],
+  "lastInstalled":null,
+  "checksum":null
+}
