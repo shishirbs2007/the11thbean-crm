@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "state_file": "../core/runtime/state.json",
+  "manifest": "../manifest.json",
+  "module_registry": "../state/module-order.json",
+  "resume": true,
+  "rollback": true,
+  "auto_validate": true,
+  "auto_deploy": true,
+  "execution_mode": "sequential",
+  "on_failure": "repair_then_retry"
+}
