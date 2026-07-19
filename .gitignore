@@ -104,3 +104,9 @@ CUSTOMER360_BUILD_LOG_*.txt
 CUSTOMER360_BUILD_REPORT_*.txt
 build-11thbean-customer360.command
 .customer360-backups/
+
+# Parallel layer local tooling
+PARALLEL_LAYER_LOG_*.txt
+PARALLEL_LAYER_REPORT_*.txt
+build-11thbean-parallel-layer.command
+.parallel-layer-backups/
