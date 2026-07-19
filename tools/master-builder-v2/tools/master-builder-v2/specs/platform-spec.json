@@ -1,0 +1,27 @@
+{
+  "platform": "The 11th Bean CRM",
+  "builder": "Master Builder v2",
+  "target_branch": "master-builder-v2",
+  "supported_modules": [
+    "core",
+    "repair",
+    "migrations",
+    "customer360",
+    "search",
+    "communications",
+    "operations",
+    "communities",
+    "events",
+    "loyalty",
+    "integrations",
+    "audit",
+    "deployment",
+    "validator"
+  ],
+  "execution": {
+    "resume": true,
+    "rollback": true,
+    "idempotent": true,
+    "parallel_safe": false
+  }
+}
