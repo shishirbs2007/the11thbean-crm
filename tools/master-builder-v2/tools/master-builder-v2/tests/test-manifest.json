@@ -1,0 +1,8 @@
+{
+  "unit": [],
+  "integration": [],
+  "smoke": [],
+  "e2e": [],
+  "minimum_pass_rate": 100,
+  "stop_on_failure": true
+}
