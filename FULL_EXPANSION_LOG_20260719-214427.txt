@@ -1,0 +1,10 @@
+The 11th Bean Full Parallel Expansion
+Version 1.0.0
+
+[32m[PASS][0m Backup created
+Navigation anchor missing: ["/feedback", "Feedback"],
+
+[31m[FAIL][0m Expansion stopped at line 2131, exit code 1.
+Production deployment was not continued after the failure.
+Backup: /Users/shishir/Downloads/Shishir/Business_Ideas/Maison_Aranya/The11thBean/The_11th_Bean_CRM_Project/the11thbean-crm/the11thbean-crm/.full-expansion-backups/20260719-214427
+Log: /Users/shishir/Downloads/Shishir/Business_Ideas/Maison_Aranya/The11thBean/The_11th_Bean_CRM_Project/the11thbean-crm/the11thbean-crm/FULL_EXPANSION_LOG_20260719-214427.txt
