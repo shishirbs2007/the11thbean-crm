@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireManager } from "@/lib/auth";
+import { requireManager, requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export async function createEvent(formData: FormData) {
