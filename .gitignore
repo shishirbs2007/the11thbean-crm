@@ -116,3 +116,9 @@ FULL_EXPANSION_LOG_*.txt
 FULL_EXPANSION_REPORT_*.txt
 build-11thbean-full-parallel-expansion.command
 .full-expansion-backups/
+
+# Full parallel expansion local tooling
+FULL_EXPANSION_LOG_*.txt
+FULL_EXPANSION_REPORT_*.txt
+build-11thbean-full-parallel-expansion.command
+.full-expansion-backups/
