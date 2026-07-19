@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "modules": [
+    "core",
+    "repair",
+    "migrations",
+    "customer360",
+    "search",
+    "communications",
+    "operations",
+    "communities",
+    "events",
+    "loyalty",
+    "integrations",
+    "audit",
+    "deployment",
+    "validator"
+  ]
+}
