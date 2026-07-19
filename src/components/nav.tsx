@@ -11,6 +11,16 @@ const links = [
   ["/events", "Events"],
   ["/insights", "Insights"],
   ["/settings", "Settings"],
+  ["/communications", "Communications"],
+  ["/follow-ups", "Follow-ups"],
+  ["/important-dates", "Important Dates"],
+  ["/feedback", "Feedback"],
+  ["/loyalty", "Loyalty"],
+  ["/segments", "Segments"],
+  ["/operations", "Operations"],
+  ["/integrations", "Integrations"],
+  ["/staff", "Staff"],
+  ["/audit", "Audit"],
 ];
 
 export async function Nav() {
