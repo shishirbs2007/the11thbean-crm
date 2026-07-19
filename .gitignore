@@ -134,3 +134,10 @@ crm-full-snapshot.txt
 crm-smoke-test.sh
 install-remaining-crm.sh
 crm-master-install.log
+
+# Automated test output and authentication
+playwright/.auth/
+playwright-report/
+test-results/
+validation-reports/
+regression-suite-install.log

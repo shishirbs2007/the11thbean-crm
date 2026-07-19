@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:public": "playwright test --config=playwright.production.config.ts --project=public",
+    "test:auth": "playwright test --config=playwright.production.config.ts --project=authenticated",
+    "test:e2e": "playwright test --config=playwright.production.config.ts",
+    "test:db": "node tests/database/integrity.mjs",
+    "test:report": "playwright show-report",
+    "validate:production": "bash ./validate-production.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -29,6 +35,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
