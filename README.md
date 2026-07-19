@@ -1,4 +1,4 @@
-# The 11th Bean CRM
+# The11thBean-CRM
 
 Foundation for The 11th Bean's hospitality CRM and integration platform.
 
