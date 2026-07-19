@@ -1,0 +1,15 @@
+{
+  "builderVersion": "2.0.0",
+  "projectName": "the11thbean-crm",
+  "backupBeforeChanges": true,
+  "autoRepair": true,
+  "autoValidate": true,
+  "autoDeploy": true,
+  "resumeOnFailure": true,
+  "rollbackOnFailure": true,
+  "stopOnLintFailure": true,
+  "stopOnBuildFailure": true,
+  "createGitCheckpoint": true,
+  "createDeploymentTag": true,
+  "logLevel": "info"
+}
