@@ -62,12 +62,16 @@ test.describe.serial("Customer lifecycle", () => {
     await page.getByPlaceholder("Last name").fill("Automation");
     await page.getByPlaceholder("Preferred name").fill("Regression");
     await page.getByPlaceholder("Email").fill(email);
-    await page.getByPlaceholder("Phone").fill(`9${timestamp}`.slice(0, 10));
+    await page
+      .getByPlaceholder("Phone")
+      .fill(`9${timestamp}`.slice(0, 10));
+
     await page
       .getByRole("button", { name: "Create customer" })
       .click();
 
     await expect(page).toHaveURL(/\/customers\/[0-9a-f-]+/);
+
     await expect(
       page.getByRole("heading", {
         name: /Regression Automation/,
@@ -83,7 +87,11 @@ test.describe.serial("Customer lifecycle", () => {
       .click();
 
     await expect(
-      page.getByText("Automated regression test note."),
+      page
+        .getByText("Automated regression test note.", {
+          exact: true,
+        })
+        .first(),
     ).toBeVisible();
 
     await page.goto("/customers");
@@ -96,6 +104,8 @@ test.describe.serial("Customer lifecycle", () => {
       .getByRole("button", { name: "Search" })
       .click();
 
-    await expect(page.getByText(firstName)).toBeVisible();
+    await expect(
+      page.getByText(firstName, { exact: true }),
+    ).toBeVisible();
   });
 });
