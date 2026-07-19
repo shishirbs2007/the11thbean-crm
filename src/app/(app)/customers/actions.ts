@@ -35,7 +35,7 @@ export async function createPerson(formData: FormData) {
 
   if (error) redirect(`/customers/new?error=${encodeURIComponent(error.message)}`);
   revalidatePath("/customers");
-  redirect(`/customers/${data.id}`);
+  redirect(`/customers/${data.id}?success=${encodeURIComponent("Customer created successfully")}`);
 }
 
 export async function updatePerson(id: string, formData: FormData) {
@@ -58,6 +58,7 @@ export async function updatePerson(id: string, formData: FormData) {
   if (error) redirect(`/customers/${id}?error=${encodeURIComponent(error.message)}`);
   revalidatePath(`/customers/${id}`);
   revalidatePath("/customers");
+  redirect(`/customers/${id}?success=${encodeURIComponent("Customer saved successfully")}`);
 }
 
 export async function addNote(id: string, formData: FormData) {
@@ -75,6 +76,7 @@ export async function addNote(id: string, formData: FormData) {
 
   if (error) redirect(`/customers/${id}?error=${encodeURIComponent(error.message)}`);
   revalidatePath(`/customers/${id}`);
+  redirect(`/customers/${id}?success=${encodeURIComponent("Note added successfully")}`);
 }
 
 export async function addPreference(id: string, formData: FormData) {
@@ -92,4 +94,5 @@ export async function addPreference(id: string, formData: FormData) {
 
   if (error) redirect(`/customers/${id}?error=${encodeURIComponent(error.message)}`);
   revalidatePath(`/customers/${id}`);
+  redirect(`/customers/${id}?success=${encodeURIComponent("Preference saved successfully")}`);
 }
