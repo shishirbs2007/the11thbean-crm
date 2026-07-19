@@ -1,0 +1,416 @@
+#!/usr/bin/env bash
+set -u
+IFS=$'\n\t'
+
+VERSION="1.1.0"
+
+# Resolve the real CLI file, even when invoked through ~/.local/bin/bean.
+SOURCE="${BASH_SOURCE[0]}"
+while [[ -L "$SOURCE" ]]; do
+  SOURCE_DIR="$(cd -P "$(dirname "$SOURCE")" >/dev/null 2>&1 && pwd)"
+  TARGET="$(readlink "$SOURCE")"
+  if [[ "$TARGET" == /* ]]; then
+    SOURCE="$TARGET"
+  else
+    SOURCE="$SOURCE_DIR/$TARGET"
+  fi
+done
+
+BIN_DIR="$(cd -P "$(dirname "$SOURCE")" >/dev/null 2>&1 && pwd)"
+ROOT="$(cd "$BIN_DIR/.." >/dev/null 2>&1 && pwd)"
+cd "$ROOT" || exit 1
+
+green=$'\033[32m'
+yellow=$'\033[33m'
+red=$'\033[31m'
+cyan=$'\033[36m'
+bold=$'\033[1m'
+reset=$'\033[0m'
+
+pass(){ printf "%s[PASS]%s %s\n" "$green" "$reset" "$*"; }
+warn(){ printf "%s[WARN]%s %s\n" "$yellow" "$reset" "$*"; }
+fail(){ printf "%s[FAIL]%s %s\n" "$red" "$reset" "$*"; }
+info(){ printf "%s[INFO]%s %s\n" "$cyan" "$reset" "$*"; }
+section(){ printf "\n%s%s%s\n" "$bold" "$*" "$reset"; }
+timestamp(){ date +%Y%m%d-%H%M%S; }
+
+require_tools() {
+  local missing=0
+  local tool
+  for tool in git node npm gh supabase vercel curl; do
+    if command -v "$tool" >/dev/null 2>&1; then
+      :
+    else
+      fail "$tool is missing"
+      missing=$((missing + 1))
+    fi
+  done
+  [[ "$missing" -eq 0 ]]
+}
+
+project_url() {
+  local url=""
+  url="$(vercel ls 2>/dev/null | grep -Eo 'https://[A-Za-z0-9._-]+\.vercel\.app' | head -1 || true)"
+
+  if [[ -z "$url" && -f .vercel/project.json ]]; then
+    local name=""
+    name="$(node -e 'const p=require("./.vercel/project.json");console.log(p.projectName||"")' 2>/dev/null || true)"
+    [[ -n "$name" ]] && url="https://${name}.vercel.app"
+  fi
+
+  printf "%s" "$url"
+}
+
+cmd_help() {
+  cat <<'EOF'
+The 11th Bean CLI
+
+Usage:
+  bean <command>
+
+Commands:
+  status       Show project, Git, Supabase and Vercel status
+  doctor       Run infrastructure checks
+  validate     Run doctor, lint, build, auth and live endpoint checks
+  build        Run lint and production build
+  auth-check   Check authentication files and live login
+  backup       Create a local source/config backup
+  deploy       Validate and deploy to Vercel production
+  release      Backup, validate, commit, push and deploy
+  open         Open the production application
+  version      Show Bean CLI version
+  help         Show this help
+EOF
+}
+
+cmd_status() {
+  section "PROJECT"
+  printf "Root: %s\n" "$ROOT"
+  printf "Branch: %s\n" "$(git branch --show-current 2>/dev/null || echo unknown)"
+  printf "Commit: %s\n" "$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+
+  section "GIT"
+  git status --short || true
+
+  section "AUTHENTICATION"
+  gh auth status >/dev/null 2>&1 && pass "GitHub authenticated" || fail "GitHub not authenticated"
+  supabase projects list >/dev/null 2>&1 && pass "Supabase authenticated" || fail "Supabase not authenticated"
+  vercel whoami >/dev/null 2>&1 && pass "Vercel authenticated" || fail "Vercel not authenticated"
+
+  section "DEPLOYMENT"
+  local url
+  url="$(project_url)"
+  [[ -n "$url" ]] && printf "URL: %s\n" "$url" || warn "Deployment URL not detected"
+}
+
+cmd_doctor() {
+  local failures=0
+  local path name
+
+  section "TOOLS"
+  if require_tools; then
+    pass "Required tools are available"
+  else
+    failures=$((failures + 1))
+  fi
+
+  section "PROJECT"
+  for path in package.json src/app supabase .git .vercel/project.json; do
+    if [[ -e "$path" ]]; then
+      pass "Found $path"
+    else
+      fail "Missing $path"
+      failures=$((failures + 1))
+    fi
+  done
+
+  section "AUTHENTICATION"
+  if gh auth status >/dev/null 2>&1; then pass "GitHub authenticated"; else fail "GitHub authentication failed"; failures=$((failures + 1)); fi
+  if supabase projects list >/dev/null 2>&1; then pass "Supabase authenticated"; else fail "Supabase authentication failed"; failures=$((failures + 1)); fi
+  if vercel whoami >/dev/null 2>&1; then pass "Vercel authenticated"; else fail "Vercel authentication failed"; failures=$((failures + 1)); fi
+
+  section "GIT"
+  if git remote get-url origin >/dev/null 2>&1; then
+    pass "Git remote exists"
+  else
+    fail "Git remote missing"
+    failures=$((failures + 1))
+  fi
+
+  local pending=""
+  pending="$(git status --porcelain 2>/dev/null | grep -Ev '(^|/)(VALIDATION_|MVP_|BEAN_|\.bean/)' || true)"
+  if [[ -z "$pending" ]]; then
+    pass "No application changes pending"
+  else
+    warn "Application changes are pending"
+  fi
+
+  section "SUPABASE"
+  if supabase migration list --linked >/tmp/bean-migrations.txt 2>&1; then
+    pass "Linked migration history is reachable"
+  else
+    fail "Could not read linked migration history"
+    failures=$((failures + 1))
+  fi
+
+  section "VERCEL"
+  if vercel env ls >/tmp/bean-vercel-env.txt 2>&1; then
+    pass "Vercel environment is reachable"
+  else
+    fail "Could not read Vercel environment"
+    failures=$((failures + 1))
+  fi
+
+  for name in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY; do
+    if grep -q "$name" /tmp/bean-vercel-env.txt 2>/dev/null; then
+      pass "$name exists"
+    else
+      fail "$name is missing"
+      failures=$((failures + 1))
+    fi
+  done
+
+  section "RESULT"
+  if [[ "$failures" -eq 0 ]]; then
+    pass "Doctor completed with no blocking failures"
+    return 0
+  fi
+
+  fail "Doctor found $failures blocking issue(s)"
+  return 1
+}
+
+cmd_build() {
+  section "LINT"
+  if npm run lint; then
+    pass "Lint passed"
+  else
+    fail "Lint failed"
+    return 1
+  fi
+
+  section "BUILD"
+  if npm run build; then
+    pass "Production build passed"
+  else
+    fail "Production build failed"
+    return 1
+  fi
+}
+
+cmd_auth_check() {
+  local failures=0
+  local path
+
+  section "AUTH FILES"
+  for path in \
+    src/app/login/page.tsx \
+    src/app/login/actions.ts \
+    src/app/auth/callback/route.ts \
+    src/lib/supabase/server.ts \
+    src/lib/supabase/proxy.ts; do
+    if [[ -f "$path" ]]; then
+      pass "Found $path"
+    else
+      fail "Missing $path"
+      failures=$((failures + 1))
+    fi
+  done
+
+  section "CALLBACK CODE"
+  if [[ -f src/app/auth/callback/route.ts ]] && grep -q "exchangeCodeForSession" src/app/auth/callback/route.ts; then
+    pass "Callback exchanges auth code for a session"
+  else
+    fail "Callback exchange is missing"
+    failures=$((failures + 1))
+  fi
+
+  if [[ -f src/app/login/actions.ts ]] && grep -q "/auth/callback" src/app/login/actions.ts; then
+    pass "Login requests the auth callback route"
+  else
+    fail "Login callback URL is missing"
+    failures=$((failures + 1))
+  fi
+
+  section "LIVE LOGIN"
+  local url=""
+  local code=""
+  url="$(project_url)"
+  if [[ -n "$url" ]]; then
+    code="$(curl -L -sS -o /dev/null -w "%{http_code}" --max-time 30 "$url/login" || true)"
+    if [[ "$code" == "200" ]]; then
+      pass "Live login page returned HTTP 200"
+    else
+      fail "Live login returned HTTP $code"
+      failures=$((failures + 1))
+    fi
+  else
+    warn "Deployment URL was not detected; live login check skipped"
+  fi
+
+  [[ "$failures" -eq 0 ]]
+}
+
+cmd_validate() {
+  local stamp report url code failures=0
+  stamp="$(timestamp)"
+  report="$ROOT/.bean/reports/validation-$stamp.txt"
+  mkdir -p "$(dirname "$report")"
+
+  {
+    printf "THE 11TH BEAN VALIDATION\n"
+    printf "Generated: %s\n\n" "$(date)"
+  } | tee "$report"
+
+  if cmd_doctor 2>&1 | tee -a "$report"; then
+    :
+  else
+    failures=$((failures + 1))
+  fi
+
+  if cmd_build 2>&1 | tee -a "$report"; then
+    :
+  else
+    failures=$((failures + 1))
+  fi
+
+  if cmd_auth_check 2>&1 | tee -a "$report"; then
+    :
+  else
+    failures=$((failures + 1))
+  fi
+
+  section "LIVE ENDPOINTS" | tee -a "$report"
+  url="$(project_url)"
+
+  if [[ -n "$url" ]]; then
+    local endpoint
+    for endpoint in "/" "/login" "/api/health"; do
+      code="$(curl --compressed -L -sS -o /tmp/bean-body.txt -w "%{http_code}" --max-time 30 "$url$endpoint" || true)"
+      if [[ "$code" == "200" ]]; then
+        pass "$endpoint returned HTTP 200" | tee -a "$report"
+      else
+        fail "$endpoint returned HTTP $code" | tee -a "$report"
+        failures=$((failures + 1))
+      fi
+    done
+  else
+    warn "Deployment URL not detected; live endpoint checks skipped" | tee -a "$report"
+  fi
+
+  section "VALIDATION RESULT" | tee -a "$report"
+  if [[ "$failures" -eq 0 ]]; then
+    pass "Validation passed" | tee -a "$report"
+    printf "Report: %s\n" "$report"
+    return 0
+  fi
+
+  fail "Validation found $failures failing section(s)" | tee -a "$report"
+  printf "Report: %s\n" "$report"
+  return 1
+}
+
+cmd_backup() {
+  local stamp target path
+  stamp="$(timestamp)"
+  target="$ROOT/.bean/backups/$stamp"
+  mkdir -p "$target"
+
+  for path in src supabase package.json package-lock.json next.config.ts .env.example; do
+    [[ -e "$path" ]] && cp -R "$path" "$target/"
+  done
+
+  git diff > "$target/uncommitted.patch" || true
+  git status --short > "$target/git-status.txt" || true
+  pass "Backup created: $target"
+}
+
+cmd_deploy() {
+  if ! cmd_validate; then
+    fail "Deployment cancelled because validation failed"
+    return 1
+  fi
+
+  section "DEPLOY"
+  local output url code
+  if ! output="$(vercel --prod --yes)"; then
+    fail "Vercel deployment failed"
+    return 1
+  fi
+
+  printf "%s\n" "$output"
+  url="$(printf "%s\n" "$output" | grep -Eo 'https://[A-Za-z0-9._-]+\.vercel\.app' | tail -1 || true)"
+  pass "Production deployment completed${url:+: $url}"
+
+  if [[ -n "$url" ]]; then
+    code="$(curl -L -sS -o /dev/null -w "%{http_code}" --max-time 30 "$url/login" || true)"
+    if [[ "$code" == "200" ]]; then
+      pass "Post-deployment login check passed"
+    else
+      fail "Post-deployment login check returned HTTP $code"
+      return 1
+    fi
+  fi
+}
+
+cmd_release() {
+  cmd_backup
+
+  if ! cmd_validate; then
+    fail "Release cancelled because validation failed"
+    return 1
+  fi
+
+  local pending=""
+  pending="$(git status --porcelain 2>/dev/null | grep -Ev '(^|/)(VALIDATION_|MVP_|BEAN_|\.bean/)' || true)"
+
+  if [[ -n "$pending" ]]; then
+    section "COMMIT"
+    git add src supabase package.json package-lock.json next.config.ts .gitignore bin/bean 2>/dev/null || true
+
+    if git diff --cached --quiet; then
+      warn "No staged application changes"
+    else
+      local message="${BEAN_COMMIT_MESSAGE:-Release The 11th Bean platform}"
+      if git commit -m "$message" && git push; then
+        pass "Changes committed and pushed"
+      else
+        fail "Git commit or push failed"
+        return 1
+      fi
+    fi
+  else
+    pass "No application changes need committing"
+  fi
+
+  cmd_deploy
+}
+
+cmd_open() {
+  local url=""
+  url="$(project_url)"
+  if [[ -z "$url" ]]; then
+    fail "Deployment URL not detected"
+    return 1
+  fi
+  open "$url"
+}
+
+case "${1:-help}" in
+  status) cmd_status ;;
+  doctor) cmd_doctor ;;
+  validate) cmd_validate ;;
+  build) cmd_build ;;
+  auth-check) cmd_auth_check ;;
+  backup) cmd_backup ;;
+  deploy) cmd_deploy ;;
+  release) cmd_release ;;
+  open) cmd_open ;;
+  version) printf "Bean CLI %s\n" "$VERSION" ;;
+  help|-h|--help) cmd_help ;;
+  *)
+    fail "Unknown command: ${1:-}"
+    cmd_help
+    exit 1
+    ;;
+esac

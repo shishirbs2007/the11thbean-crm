@@ -92,3 +92,9 @@ repair-11thbean-mvp.command
 
 # Bean CLI local state
 .bean/
+
+# Local installers and downloaded bundles
+*.zip
+*.command
+CUSTOMER360_BUILD_LOG_*.txt
+CUSTOMER360_BUILD_REPORT_*.txt
