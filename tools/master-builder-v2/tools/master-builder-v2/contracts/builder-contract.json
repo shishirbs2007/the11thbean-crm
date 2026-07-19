@@ -1,0 +1,27 @@
+{
+  "builder": {
+    "name": "Master Builder v2",
+    "version": "2.0.0"
+  },
+  "guarantees": {
+    "idempotent": true,
+    "self_repair": true,
+    "resume_supported": true,
+    "rollback_supported": true,
+    "auto_backup": true,
+    "auto_validate": true,
+    "auto_deploy": true
+  },
+  "failure_policy": {
+    "lint": "stop",
+    "build": "stop",
+    "migration": "rollback",
+    "deployment": "rollback",
+    "validation": "repair_then_retry"
+  },
+  "output": {
+    "logs": true,
+    "reports": true,
+    "checkpoints": true
+  }
+}
