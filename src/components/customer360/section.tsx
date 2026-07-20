@@ -10,7 +10,7 @@ export function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border p-6">
+    <section aria-label={title} className="rounded-2xl border p-6">
       <h2 className="text-lg font-semibold">{title}</h2>
       {description && (
         <p className="mt-1 text-sm text-neutral-500">{description}</p>

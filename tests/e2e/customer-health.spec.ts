@@ -55,9 +55,48 @@ test.describe.serial("Customer health intelligence", () => {
 
     if (profileError) throw profileError;
 
-    const { error: visitError } = await admin.from("visits").insert({
+    const { data: visitRows, error: visitError } = await admin
+      .from("visits")
+      .insert([
+        buildVisit(0),
+        buildVisit(7),
+      ])
+      .select("id");
+
+    if (visitError) throw visitError;
+
+    // Two visits, both with a Cortado and a Croissant, so the CRM can infer
+    // "their usual" from order history rather than the staff note.
+    const { error: itemError } = await admin.from("visit_items").insert(
+      visitRows.flatMap((visit) => [
+        {
+          visit_id: visit.id,
+          item_name: "Cortado",
+          category: "coffee",
+          quantity: 1,
+          unit_price: 220,
+          total_amount: 220,
+        },
+        {
+          visit_id: visit.id,
+          item_name: "Croissant",
+          category: "bakery",
+          quantity: 1,
+          unit_price: 180,
+          total_amount: 180,
+        },
+      ]),
+    );
+
+    if (itemError) throw itemError;
+  });
+
+  function buildVisit(daysAgo: number) {
+    return {
       person_id: personId,
-      visited_at: new Date().toISOString(),
+      visited_at: new Date(
+        Date.now() - daysAgo * 24 * 60 * 60 * 1000,
+      ).toISOString(),
       visit_type: "walk_in",
       party_size: 2,
       gross_amount: 500,
@@ -65,10 +104,8 @@ test.describe.serial("Customer health intelligence", () => {
       tax_amount: 25,
       net_amount: 475,
       source: "manual",
-    });
-
-    if (visitError) throw visitError;
-  });
+    };
+  }
 
   test.afterAll(async () => {
     const admin = adminClient();
@@ -86,9 +123,44 @@ test.describe.serial("Customer health intelligence", () => {
   test("shows health metrics and suggestions", async ({ page }) => {
     await page.goto(`/customers/${personId}`);
 
-    await expect(page.getByText("Customer health", { exact: true })).toBeVisible();
-    await expect(page.getByText("Hospitality suggestions", { exact: true })).toBeVisible();
-    await expect(page.getByText(/Flat White/)).toBeVisible();
-    await expect(page.getByText(/Peanuts/)).toBeVisible();
+    const health = page.getByRole("region", { name: "Customer health" });
+    const suggestions = page.getByRole("region", {
+      name: "Hospitality suggestions",
+    });
+
+    await expect(health).toBeVisible();
+    await expect(suggestions).toBeVisible();
+    await expect(suggestions.getByText(/Flat White/)).toBeVisible();
+    await expect(suggestions.getByText(/Peanuts/)).toBeVisible();
+  });
+
+  test("infers the usual order from recorded order history", async ({
+    page,
+  }) => {
+    await page.goto(`/customers/${personId}`);
+
+    const health = page.getByRole("region", { name: "Customer health" });
+
+    // Ordered on both visits, so the till outranks the staff note of "Flat White".
+    await expect(health.getByText("Cortado", { exact: true })).toBeVisible();
+    await expect(health.getByText("Croissant", { exact: true })).toBeVisible();
+  });
+
+  test("scores relationships and referrals without manual entry", async ({
+    page,
+  }) => {
+    await page.goto(`/customers/${personId}`);
+
+    const health = page.getByRole("region", { name: "Customer health" });
+
+    await expect(
+      health.getByText("Relationship score", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      health.getByText("Community engagement", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      health.getByText("Referral impact", { exact: true }),
+    ).toBeVisible();
   });
 });

@@ -1,6 +1,14 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { Section } from "@/components/customer360/section";
+import {
+  buildHospitalitySuggestions,
+  parseTasteProfile,
+  upcomingImportantDates,
+  usualDrink,
+  usualFood,
+  type HospitalitySignals,
+} from "@/lib/intelligence/hospitality";
 import { addNote, addPreference, updatePerson } from "../actions";
 import {
   addImportantDate,
@@ -165,6 +173,7 @@ export default async function CustomerPage({
       .eq("is_active", true)
       .order("first_name")
       .limit(500),
+    supabase.rpc("customer_taste_profile", { target_person_id: id }),
   ]);
 
   const [
@@ -184,6 +193,7 @@ export default async function CustomerPage({
     loyaltyResult,
     healthResult,
     optionsResult,
+    tasteResult,
   ] = results;
 
   const person = personResult.data;
@@ -225,42 +235,27 @@ export default async function CustomerPage({
   const coffee = (hospitality?.coffee_preferences ?? {}) as JsonObject;
   const food = (hospitality?.food_preferences ?? {}) as JsonObject;
 
-  const relationshipScore = Math.min(
-    100,
-    visits.length * 4 +
-      referrals.length * 12 +
-      memberships.length * 8 +
-      registrations.length * 5 +
-      milestones.length * 4 +
-      relationships.length * 6,
-  );
-
+  const relationshipScore = numberValue(health?.relationship_score);
   const lastVisitDays = daysSince(health?.last_visit_at);
-  const favouriteDrink = jsonString(coffee, "drink");
-  const suggestions = [
-    ...(favouriteDrink
-      ? [`Offer their usual ${favouriteDrink} or a thoughtful variation.`]
-      : ["Ask what coffee style they usually enjoy."]),
-    ...((hospitality?.allergies || []).length > 0
-      ? [
-          `Double-check allergens before serving: ${(
-            hospitality?.allergies || []
-          ).join(", ")}.`,
-        ]
-      : []),
-    ...(lastVisitDays !== null && lastVisitDays >= 45
-      ? [
-          `Reconnect personally. Their last recorded visit was ${lastVisitDays} days ago.`,
-        ]
-      : []),
-    ...(referrals.length > 0
-      ? [
-          `Thank them for introducing ${referrals.length} customer${
-            referrals.length === 1 ? "" : "s"
-          }.`,
-        ]
-      : []),
-  ].slice(0, 5);
+  const taste = parseTasteProfile(tasteResult.data);
+
+  const signals: HospitalitySignals = {
+    taste,
+    statedDrink: jsonString(coffee, "drink"),
+    allergies: hospitality?.allergies ?? [],
+    seatingPreference:
+      preferences.find(
+        (preference) => preference.preference_type === "seating",
+      )?.preference_value ?? "",
+    daysSinceLastVisit: lastVisitDays,
+    referralCount: referrals.length,
+    communityNames: memberships.flatMap(
+      (membership) => one(membership.communities)?.name ?? [],
+    ),
+    upcomingDates: upcomingImportantDates(dates),
+  };
+
+  const suggestions = buildHospitalitySuggestions(signals);
 
   return (
     <main className="mx-auto max-w-7xl px-5 py-10">
@@ -310,6 +305,15 @@ export default async function CustomerPage({
                 ? "No visit recorded"
                 : `${lastVisitDays} day${lastVisitDays === 1 ? "" : "s"} ago`,
             ],
+            ["Community engagement", `${numberValue(health?.community_score).toFixed(0)}/100`],
+            [
+              "Referral impact",
+              `${numberValue(health?.referral_count).toFixed(0)} introduced · ₹${numberValue(
+                health?.referred_revenue,
+              ).toFixed(0)}`,
+            ],
+            ["Usual drink", usualDrink(signals) || "Not enough data"],
+            ["Usual food", usualFood(signals) || "Not enough data"],
           ].map(([label, value]) => (
             <div key={label} className="rounded-2xl border p-5">
               <p className="text-sm text-neutral-500">{label}</p>
