@@ -38,6 +38,7 @@ test.describe("Public production surface", () => {
   });
 
   const protectedRoutes = [
+    "/briefing",
     "/dashboard",
     "/search",
     "/customers",

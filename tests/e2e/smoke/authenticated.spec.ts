@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 const pages = [
+  ["/briefing", "Daily briefing"],
   ["/dashboard", "Dashboard"],
   ["/search", "Global search"],
   ["/customers", "Customers"],
