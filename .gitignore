@@ -141,3 +141,13 @@ playwright-report/
 test-results/
 validation-reports/
 regression-suite-install.log
+
+# Bootstrapper and validator artifacts
+.mvp-backups/
+.full-expansion-backups/
+*.zip
+VALIDATION_LOG_*.txt
+VALIDATION_REPORT_*.txt
+MVP_BUILD_LOG_*.txt
+MVP_REPAIR_REPORT_*.txt
+FULL_EXPANSION_LOG_*.txt
