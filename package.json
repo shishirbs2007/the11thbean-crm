@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint src tests vitest.config.ts playwright.shared.ts playwright.production.config.ts playwright.staging.config.ts",
+    "lint": "eslint src tests vitest.config.ts playwright.shared.ts playwright.production.config.ts playwright.staging.config.ts playwright.local.config.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:unit": "vitest run",
@@ -21,7 +21,10 @@
     "validate:production": "bash ./validate-production.sh",
     "test:auth:smoke": "playwright test --config=playwright.production.config.ts --project=auth-smoke",
     "test:smoke": "playwright test --config=playwright.production.config.ts",
-    "test:e2e:staging": "playwright test --config=playwright.staging.config.ts"
+    "test:e2e:staging": "playwright test --config=playwright.staging.config.ts",
+    "test:e2e:local": "bash ./scripts/test-local-e2e.sh",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

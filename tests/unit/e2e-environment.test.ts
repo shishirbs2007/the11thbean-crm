@@ -74,6 +74,26 @@ describe("assertWritesAllowed", () => {
     expect(() => assertWritesAllowed()).not.toThrow();
   });
 
+  it("permits a local run against a loopback Supabase stack", () => {
+    setEnvironment({
+      CRM_E2E_ALLOW_WRITES: "true",
+      CRM_E2E_ENVIRONMENT: "local",
+      NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321",
+    });
+
+    expect(() => assertWritesAllowed()).not.toThrow();
+  });
+
+  it("refuses a local run that is secretly pointed at production", () => {
+    setEnvironment({
+      CRM_E2E_ALLOW_WRITES: "true",
+      CRM_E2E_ENVIRONMENT: "local",
+      NEXT_PUBLIC_SUPABASE_URL: PRODUCTION_URL,
+    });
+
+    expect(() => assertWritesAllowed()).toThrow(/production Supabase project/);
+  });
+
   it("refuses to touch the production project even when flagged staging", () => {
     setEnvironment({
       ...stagingEnvironment(),

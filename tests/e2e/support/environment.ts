@@ -17,11 +17,26 @@ export function isProductionSupabase(url: string | undefined): boolean {
 }
 
 /**
+ * Environments that hold disposable data. Until a hosted staging project
+ * exists, "local" is the working target: a Supabase stack on this machine,
+ * seeded from the same migrations as production.
+ */
+const WRITABLE_ENVIRONMENTS = ["local", "staging"] as const;
+
+export type WritableEnvironment = (typeof WRITABLE_ENVIRONMENTS)[number];
+
+function isWritableEnvironment(
+  value: string | undefined,
+): value is WritableEnvironment {
+  return WRITABLE_ENVIRONMENTS.includes(value as WritableEnvironment);
+}
+
+/**
  * Guards every write-enabled suite. Three conditions must all hold before a
  * test is allowed to insert or delete anything:
  *
  *   1. CRM_E2E_ALLOW_WRITES is explicitly "true"
- *   2. CRM_E2E_ENVIRONMENT is "staging"
+ *   2. CRM_E2E_ENVIRONMENT is "local" or "staging"
  *   3. The configured Supabase project is not production
  *
  * Any missing or mismatched value aborts the run rather than falling back to
@@ -35,13 +50,14 @@ export function assertWritesAllowed(): void {
   if (allowWrites !== "true") {
     throw new Error(
       "Write-enabled end-to-end tests are disabled. Set CRM_E2E_ALLOW_WRITES=true " +
-        "and point the suite at the staging Supabase project.",
+        "and point the suite at a local or staging Supabase project.",
     );
   }
 
-  if (environment !== "staging") {
+  if (!isWritableEnvironment(environment)) {
     throw new Error(
-      `Write-enabled end-to-end tests require CRM_E2E_ENVIRONMENT=staging, received ` +
+      "Write-enabled end-to-end tests require CRM_E2E_ENVIRONMENT to be one of " +
+        `${WRITABLE_ENVIRONMENTS.join(", ")}, received ` +
         `${environment ? `"${environment}"` : "no value"}.`,
     );
   }

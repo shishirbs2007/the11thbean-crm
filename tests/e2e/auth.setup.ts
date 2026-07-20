@@ -9,7 +9,7 @@ const authFile = path.join(
   "playwright/.auth/user.json",
 );
 
-setup("authenticate production test user", async ({ page, baseURL }) => {
+setup("authenticate the synthetic staff user", async ({ page, baseURL }) => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const email =
