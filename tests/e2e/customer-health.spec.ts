@@ -130,7 +130,8 @@ test.describe.serial("Customer health intelligence", () => {
 
     await expect(health).toBeVisible();
     await expect(suggestions).toBeVisible();
-    await expect(suggestions.getByText(/Flat White/)).toBeVisible();
+    // The suggestion names the inferred usual, not the staff note of "Flat White".
+    await expect(suggestions.getByText(/Cortado/)).toBeVisible();
     await expect(suggestions.getByText(/Peanuts/)).toBeVisible();
   });
 
