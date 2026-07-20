@@ -59,3 +59,11 @@ Application: `vercel rollback` or promote a previous deployment.
 Database: migrations are additive, so rolling back the application is safe
 without touching the schema. If a migration must be reversed, write a new
 forward migration that undoes it rather than editing history.
+
+
+## Release history
+
+See [releases.md](releases.md) for every production release, the migrations it
+carried, its backup location and its rollback target.
+
+**Currently deployed:** v1.0.0, commit `87b91c7`, 28 migrations.

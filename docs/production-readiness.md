@@ -1,10 +1,13 @@
 # Production readiness report
 
-Assessed 20 July 2026, against the `staging` branch at commit `2afeb39`.
+Assessed 20 July 2026. **Updated after the v1.0.0 release** — production now
+runs commit `87b91c7` with 28 migrations applied. See
+[releases.md](releases.md).
 
-**Verdict: ready for a single café in production, with three caveats named
-under Risk.** It is not ready for franchise scale, and the messaging features
-are structurally complete but functionally inert.
+**Verdict: in production as of v1.0.0, running a single café.** It is not ready
+for franchise scale, and the outbound messaging features remain structurally
+complete but functionally inert — no provider adapter is implemented, and the
+default refuses to send rather than pretending.
 
 ---
 
@@ -110,22 +113,24 @@ dumps are documented but depend on somebody remembering.
 
 ## Monitoring
 
-**Red.**
+**Amber**, improved from red by the v1.0.0 release.
 
-There is effectively none. `/api/health` returns liveness. Adapter health and
-automation failures are visible in the UI if somebody looks.
+`/system` now answers "is this working?" in one place: eight health checks each
+stating what it measured and what to do, plus an incident record for anything
+that fails where nobody would otherwise notice. Import failures are captured
+automatically.
 
-There is no alerting, no error tracking, no uptime monitoring and no
-notification when an automation fails. If production broke at 6am, the café
-would find out from a guest.
-
-This is the largest gap in the report.
+**Still missing: nobody is told.** Incidents are recorded, not delivered. If
+production broke at 6am the café would still learn it from a guest, unless
+somebody happened to open the page. An `IncidentSink` interface exists so an
+external service plugs in without touching any check — that remains the single
+highest-value operational gap.
 
 ## Technical debt
 
 | Item | Severity |
 | --- | --- |
-| No error tracking or alerting | High |
+| No external alerting — incidents recorded but not delivered | High |
 | Backup retention on the free plan | High |
 | No load profiling of the analytics layer | Medium |
 | Preview deployments publicly reachable | Medium |
