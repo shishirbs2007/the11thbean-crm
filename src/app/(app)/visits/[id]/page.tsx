@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { Section } from "@/components/customer360/section";
 import {
   addVisitItem,
@@ -39,16 +40,10 @@ function inputDateTime(value: string): string {
 
 export default async function VisitPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{
-    error?: string;
-    success?: string;
-  }>;
 }) {
   const { id } = await params;
-  const query = await searchParams;
   const { supabase } = await requireUser();
 
   const [visitResult, itemsResult, peopleResult] = await Promise.all([
@@ -129,10 +124,10 @@ export default async function VisitPage({
         </div>
 
         {visit.order_reference && (
-  <p className="mt-2 text-sm text-neutral-500">
-    Order reference: {visit.order_reference}
-  </p>
-)}
+          <p className="mt-2 text-sm text-neutral-500">
+            Order reference: {visit.order_reference}
+          </p>
+        )}
 
         <form action={deleteAction}>
           <button className="rounded-2xl border border-red-300 px-5 py-3 text-sm text-red-700">
@@ -141,17 +136,7 @@ export default async function VisitPage({
         </form>
       </div>
 
-      {(query.error || errors.length > 0) && (
-        <div className="mt-6 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-700">
-          {query.error || errors.join(" | ")}
-        </div>
-      )}
-
-      {query.success && (
-        <div className="mt-6 rounded-xl border border-green-300 bg-green-50 p-4 text-sm text-green-800">
-          {query.success}
-        </div>
-      )}
+      <ErrorPanel messages={[errors.join(" | ")]} />
 
       <div className="mt-8 grid gap-6 xl:grid-cols-2">
         <Section title="Visit details">

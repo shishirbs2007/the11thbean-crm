@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { PageHeader } from "@/components/platform/page-header";
 
 export default async function OperationsPage() {
@@ -31,11 +32,7 @@ export default async function OperationsPage() {
         description="Opening, closing and equipment routines with a future-ready completion log."
       />
 
-      {error && (
-        <p className="mt-5 rounded-xl border border-red-300 p-3 text-red-700">
-          {error.message}
-        </p>
-      )}
+      <ErrorPanel messages={[error?.message]} />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         {checklists.map((checklist) => {

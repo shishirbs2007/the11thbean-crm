@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { PageHeader } from "@/components/platform/page-header";
 import {
   addSegmentMember,
@@ -6,12 +7,7 @@ import {
   removeSegmentMember,
 } from "./actions";
 
-export default async function SegmentsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; success?: string }>;
-}) {
-  const params = await searchParams;
+export default async function SegmentsPage() {
   const { supabase } = await requireUser();
 
   const [segmentsResult, peopleResult] = await Promise.all([
@@ -40,17 +36,7 @@ export default async function SegmentsPage({
         description="Reusable customer groups for recognition, outreach and community programming."
       />
 
-      {(params.error || segmentsResult.error) && (
-        <p className="mt-5 rounded-xl border border-red-300 bg-red-50 p-4 text-red-700">
-          {params.error || segmentsResult.error?.message}
-        </p>
-      )}
-
-      {params.success && (
-        <p className="mt-5 rounded-xl border border-green-300 bg-green-50 p-4 text-green-800">
-          {params.success}
-        </p>
-      )}
+      <ErrorPanel messages={[segmentsResult.error?.message]} />
 
       <form action={createSegment} className="mt-7 grid gap-3 rounded-2xl border p-6 sm:grid-cols-2 lg:grid-cols-3">
         <input name="name" required placeholder="Segment name" className="rounded-xl border px-3 py-2" />

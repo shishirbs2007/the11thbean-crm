@@ -1,14 +1,10 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { PageHeader } from "@/components/platform/page-header";
 import { createFeedback, resolveFeedback } from "./actions";
 
-export default async function FeedbackPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
-  const { error: queryError } = await searchParams;
+export default async function FeedbackPage() {
   const { supabase } = await requireUser();
 
   const [{ data: feedbackData, error }, { data: peopleData }] =
@@ -38,11 +34,7 @@ export default async function FeedbackPage({
         description="Capture praise, concerns and service-recovery work in one place."
       />
 
-      {(queryError || error) && (
-        <p className="mt-5 rounded-xl border border-red-300 p-3 text-red-700">
-          {queryError || error?.message}
-        </p>
-      )}
+      <ErrorPanel messages={[error?.message]} />
 
       <form
         action={createFeedback}

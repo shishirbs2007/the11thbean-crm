@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { createHousehold } from "./actions";
 
 type SearchParams = {
@@ -121,19 +122,8 @@ export default async function HouseholdsPage({
         </div>
       </div>
 
-      {(params.error || householdsResult.error || peopleResult.error) && (
-        <div className="mt-6 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-700">
-          {params.error ||
-            householdsResult.error?.message ||
-            peopleResult.error?.message}
-        </div>
-      )}
-
-      {params.success && (
-        <div className="mt-6 rounded-xl border border-green-300 bg-green-50 p-4 text-sm text-green-800">
-          {params.success}
-        </div>
-      )}
+      <ErrorPanel messages={[householdsResult.error?.message ||
+            peopleResult.error?.message]} />
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[1.5fr_1fr]">
         <section className="rounded-2xl border p-6">

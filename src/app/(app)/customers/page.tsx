@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 
 type CustomerListItem = {
   id: string;
@@ -131,11 +132,7 @@ export default async function CustomersPage({
         )}
       </div>
 
-      {error && (
-        <p className="mt-5 rounded-xl border border-red-300 bg-red-50 p-4 text-red-700">
-          {error.message}
-        </p>
-      )}
+      <ErrorPanel messages={[error?.message]} />
 
       <div className="mt-6 overflow-hidden rounded-2xl border">
         {people.length === 0 ? (

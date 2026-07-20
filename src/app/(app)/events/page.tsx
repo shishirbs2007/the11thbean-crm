@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { PageHeader } from "@/components/platform/page-header";
 import { capacityLabel, capacityState } from "@/lib/intelligence/events";
 import { createEvent } from "./actions";
@@ -19,12 +20,7 @@ type SummaryRow = {
   attended_count: number;
 };
 
-export default async function EventsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; success?: string }>;
-}) {
-  const { error: queryError, success } = await searchParams;
+export default async function EventsPage() {
   const { supabase } = await requireUser();
 
   const [{ data, error }, summaryResult] = await Promise.all([
@@ -52,13 +48,7 @@ export default async function EventsPage({
         description="Registrations, attendance and event history."
       />
 
-      {success && <p className="mt-4 rounded-xl border border-green-300 bg-green-50 p-3 text-green-800">{success}</p>}
-
-      {(queryError || error) && (
-        <p className="mt-4 text-red-700">
-          {queryError || error?.message}
-        </p>
-      )}
+      <ErrorPanel messages={[error?.message]} />
 
       <form
         action={createEvent}

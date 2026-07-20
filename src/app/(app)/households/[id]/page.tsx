@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { Section } from "@/components/customer360/section";
 import {
   addHouseholdAddress,
@@ -67,16 +68,10 @@ function addressText(address: {
 
 export default async function HouseholdPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{
-    error?: string;
-    success?: string;
-  }>;
 }) {
   const { id } = await params;
-  const query = await searchParams;
   const { supabase } = await requireUser();
 
   const results = await Promise.all([
@@ -211,17 +206,7 @@ export default async function HouseholdPage({
         </div>
       </div>
 
-      {(query.error || errors.length > 0) && (
-        <div className="mt-6 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-700">
-          {query.error || errors.join(" | ")}
-        </div>
-      )}
-
-      {query.success && (
-        <div className="mt-6 rounded-xl border border-green-300 bg-green-50 p-4 text-sm text-green-800">
-          {query.success}
-        </div>
-      )}
+      <ErrorPanel messages={[errors.join(" | ")]} />
 
       <div className="mt-8 grid gap-6 xl:grid-cols-2">
         <Section title="Household details">

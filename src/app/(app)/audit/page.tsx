@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { PageHeader } from "@/components/platform/page-header";
 
 export default async function AuditPage({
@@ -40,11 +41,7 @@ export default async function AuditPage({
         <button className="rounded-xl bg-black px-4 py-2 text-white">Filter</button>
       </form>
 
-      {error && (
-        <p className="mt-5 rounded-xl border border-red-300 p-3 text-red-700">
-          {error.message}
-        </p>
-      )}
+      <ErrorPanel messages={[error?.message]} />
 
       <div className="mt-7 overflow-hidden rounded-2xl border">
         {entries.length === 0 ? (

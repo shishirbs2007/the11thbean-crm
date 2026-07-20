@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { claimFirstAdmin, signOut } from "./actions";
 
 export default async function SettingsPage({
@@ -13,7 +14,7 @@ export default async function SettingsPage({
   return (
     <main className="mx-auto max-w-3xl px-5 py-10">
       <h1 className="text-3xl font-semibold">Settings</h1>
-      {error && <p className="mt-5 rounded-xl border border-red-300 p-3 text-red-700">{error}</p>}
+      <ErrorPanel messages={[error]} />
 
       <section className="mt-7 rounded-2xl border p-6">
         <h2 className="font-semibold">Your access</h2>

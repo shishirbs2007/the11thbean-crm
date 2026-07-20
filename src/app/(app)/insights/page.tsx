@@ -1,14 +1,10 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { PageHeader } from "@/components/platform/page-header";
 import { recalculateHealth } from "./actions";
 
-export default async function InsightsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; success?: string }>;
-}) {
-  const params = await searchParams;
+export default async function InsightsPage() {
   const { supabase } = await requireUser();
 
   const [
@@ -87,17 +83,7 @@ export default async function InsightsPage({
         </form>
       </div>
 
-      {(params.error || healthResult.error) && (
-        <p className="mt-5 rounded-xl border border-red-300 bg-red-50 p-4 text-red-700">
-          {params.error || healthResult.error?.message}
-        </p>
-      )}
-
-      {params.success && (
-        <p className="mt-5 rounded-xl border border-green-300 bg-green-50 p-4 text-green-800">
-          {params.success}
-        </p>
-      )}
+      <ErrorPanel messages={[healthResult.error?.message]} />
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <article className="rounded-2xl border p-5">

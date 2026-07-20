@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { PageHeader } from "@/components/platform/page-header";
 
 export default async function IntegrationsPage() {
@@ -31,11 +32,7 @@ export default async function IntegrationsPage() {
         description="Provider-neutral monitoring for PetPooja and future external systems."
       />
 
-      {(runsError || errorsError) && (
-        <p className="mt-5 rounded-xl border border-red-300 p-3 text-red-700">
-          {runsError?.message || errorsError?.message}
-        </p>
-      )}
+      <ErrorPanel messages={[runsError?.message || errorsError?.message]} />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border p-6">

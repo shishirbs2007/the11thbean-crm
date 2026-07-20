@@ -1,12 +1,8 @@
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { createTag } from "./actions";
 
-export default async function TagsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
-  const { error: queryError } = await searchParams;
+export default async function TagsPage() {
   const { supabase } = await requireUser();
 
   const { data, error } = await supabase
@@ -23,11 +19,7 @@ export default async function TagsPage({
         Flexible labels for hospitality, community and relationship context.
       </p>
 
-      {(queryError || error) && (
-        <p className="mt-5 rounded-xl border border-red-300 p-3 text-red-700">
-          {queryError || error?.message}
-        </p>
-      )}
+      <ErrorPanel messages={[error?.message]} />
 
       <form
         action={createTag}

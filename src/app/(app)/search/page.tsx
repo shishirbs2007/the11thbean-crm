@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { GlobalSearchForm } from "@/components/search/global-search-form";
 
 type SearchResult = {
@@ -38,11 +39,7 @@ export default async function SearchPage({
         <GlobalSearchForm defaultValue={q} />
       </div>
 
-      {error && (
-        <p className="mt-5 rounded-xl border border-red-300 p-3 text-red-700">
-          {error.message}
-        </p>
-      )}
+      <ErrorPanel messages={[error?.message]} />
 
       <div className="mt-7 overflow-hidden rounded-2xl border">
         {!q.trim() ? (

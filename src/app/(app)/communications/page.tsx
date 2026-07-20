@@ -1,13 +1,9 @@
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { PageHeader } from "@/components/platform/page-header";
 import { createCampaign, createTemplate } from "./actions";
 
-export default async function CommunicationsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
-  const { error: queryError } = await searchParams;
+export default async function CommunicationsPage() {
   const { supabase } = await requireUser();
 
   const [
@@ -61,13 +57,8 @@ export default async function CommunicationsPage({
         description="Own the decisioning, consent, templates, campaigns and history. Let specialist providers handle delivery."
       />
 
-      {(queryError || templatesError || campaignsError) && (
-        <p className="mt-5 rounded-xl border border-red-300 p-3 text-red-700">
-          {queryError ||
-            templatesError?.message ||
-            campaignsError?.message}
-        </p>
-      )}
+      <ErrorPanel messages={[templatesError?.message ||
+            campaignsError?.message]} />
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <article className="rounded-2xl border p-5">

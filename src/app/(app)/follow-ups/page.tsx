@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { PageHeader } from "@/components/platform/page-header";
 import { completeFollowUp, createFollowUp } from "./actions";
 
@@ -10,12 +11,7 @@ type PersonOption = {
   preferred_name: string | null;
 };
 
-export default async function FollowUpsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
-  const { error: queryError } = await searchParams;
+export default async function FollowUpsPage() {
   const { supabase } = await requireUser();
 
   const [{ data: tasksData, error }, { data: peopleData }] =
@@ -45,11 +41,7 @@ export default async function FollowUpsPage({
         description="Keep promises, reconnect thoughtfully and prevent customer context from falling through the cracks."
       />
 
-      {(queryError || error) && (
-        <p className="mt-5 rounded-xl border border-red-300 p-3 text-red-700">
-          {queryError || error?.message}
-        </p>
-      )}
+      <ErrorPanel messages={[error?.message]} />
 
       <form
         action={createFollowUp}

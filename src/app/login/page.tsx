@@ -1,4 +1,5 @@
 import { sendMagicLink } from "./actions";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 
 export default async function LoginPage({
   searchParams,
@@ -21,11 +22,7 @@ export default async function LoginPage({
             Sign-in link sent. Check your inbox.
           </p>
         )}
-        {params.error && (
-          <p className="mt-5 rounded-xl border border-red-300 p-3 text-sm text-red-700">
-            {params.error}
-          </p>
-        )}
+        <ErrorPanel messages={[params.error]} />
 
         <form action={sendMagicLink} className="mt-6 space-y-4">
           <input

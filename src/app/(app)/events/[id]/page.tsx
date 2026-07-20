@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { Section } from "@/components/customer360/section";
 import { PageHeader } from "@/components/platform/page-header";
 import { SubmitButton } from "@/components/submit-button";
@@ -71,13 +72,10 @@ function forDateTimeInput(value: string | null): string {
 
 export default async function EventDetailPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string; success?: string }>;
 }) {
   const { id } = await params;
-  const { error: queryError, success } = await searchParams;
   const { supabase } = await requireUser();
 
   const [
@@ -148,7 +146,6 @@ export default async function EventDetailPage({
   );
 
   const errors = [
-    queryError,
     eventResult.error?.message,
     summaryResult.error?.message,
     registrationsResult.error?.message,
@@ -170,17 +167,7 @@ export default async function EventDetailPage({
         }`}
       />
 
-      {success && (
-        <p className="mt-4 rounded-xl border border-green-300 bg-green-50 p-3 text-green-800">
-          {success}
-        </p>
-      )}
-
-      {errors.length > 0 && (
-        <p className="mt-4 rounded-xl border border-red-300 p-3 text-red-700">
-          {errors.join(" | ")}
-        </p>
-      )}
+      <ErrorPanel messages={[errors.join(" | ")]} />
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[

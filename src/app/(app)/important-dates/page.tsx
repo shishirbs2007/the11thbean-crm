@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { PageHeader } from "@/components/platform/page-header";
 
 type UpcomingDate = {
@@ -31,11 +32,7 @@ export default async function ImportantDatesPage() {
         description="Upcoming birthdays, anniversaries and customer milestones."
       />
 
-      {error && (
-        <p className="mt-5 rounded-xl border border-red-300 p-3 text-red-700">
-          {error.message}
-        </p>
-      )}
+      <ErrorPanel messages={[error?.message]} />
 
       <div className="mt-7 overflow-hidden rounded-2xl border">
         {dates.length === 0 ? (

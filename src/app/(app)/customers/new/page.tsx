@@ -1,4 +1,5 @@
 import { createPerson } from "../actions";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 
 export default async function NewCustomerPage({
   searchParams,
@@ -10,7 +11,7 @@ export default async function NewCustomerPage({
   return (
     <main className="mx-auto max-w-3xl px-5 py-10">
       <h1 className="text-3xl font-semibold">Add customer</h1>
-      {error && <p className="mt-4 text-red-700">{error}</p>}
+      <ErrorPanel messages={[error]} />
       <form action={createPerson} className="mt-7 grid gap-4 sm:grid-cols-2">
         <input name="first_name" required placeholder="First name" className="rounded-xl border px-4 py-3" />
         <input name="last_name" placeholder="Last name" className="rounded-xl border px-4 py-3" />

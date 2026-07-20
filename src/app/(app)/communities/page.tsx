@@ -1,4 +1,7 @@
+import Link from "next/link";
+
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { PageHeader } from "@/components/platform/page-header";
 import {
   communityStatus,
@@ -13,12 +16,7 @@ type CommunityItem = {
   is_active: boolean;
 };
 
-export default async function CommunitiesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; success?: string }>;
-}) {
-  const { error: queryError, success } = await searchParams;
+export default async function CommunitiesPage() {
   const { supabase } = await requireUser();
 
   const [{ data, error }, healthResult] = await Promise.all([
@@ -43,13 +41,7 @@ export default async function CommunitiesPage({
         description="Clubs, circles and recurring groups around the café."
       />
 
-      {success && <p className="mt-4 rounded-xl border border-green-300 bg-green-50 p-3 text-green-800">{success}</p>}
-
-      {(queryError || error) && (
-        <p className="mt-4 text-red-700">
-          {queryError || error?.message}
-        </p>
-      )}
+      <ErrorPanel messages={[error?.message]} />
 
       <form
         action={createCommunity}
@@ -77,7 +69,12 @@ export default async function CommunitiesPage({
         ) : (
           communities.map((community) => (
             <article key={community.id} className="rounded-2xl border p-5">
-              <h2 className="font-semibold">{community.name}</h2>
+              <Link
+                href={`/communities/${community.id}`}
+                className="font-semibold underline"
+              >
+                {community.name}
+              </Link>
               <p className="mt-2 text-sm text-neutral-600">
                 {community.description || "No description"}
               </p>

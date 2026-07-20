@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { Section } from "@/components/customer360/section";
 import {
   buildHospitalitySuggestions,
@@ -83,13 +84,10 @@ function daysSince(value: string | null | undefined): number | null {
 
 export default async function CustomerPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
-  const { error: queryError } = await searchParams;
   const { supabase } = await requireUser();
 
   const results = await Promise.all([
@@ -279,12 +277,7 @@ export default async function CustomerPage({
         </div>
       </div>
 
-      {(queryError || errors.length > 0) && (
-        <div className="mt-5 rounded-xl border border-red-300 p-3 text-red-700">
-          {queryError ||
-            errors.map((error) => error?.message).join(" | ")}
-        </div>
-      )}
+      <ErrorPanel messages={[errors.map((error) => error?.message).join(" | ")]} />
 
       <Section
         title="Customer health"

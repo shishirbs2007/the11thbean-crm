@@ -1,14 +1,10 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { PageHeader } from "@/components/platform/page-header";
 import { applyTransaction, issueGiftCard } from "./actions";
 
-export default async function LoyaltyPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; success?: string }>;
-}) {
-  const params = await searchParams;
+export default async function LoyaltyPage() {
   const { supabase } = await requireUser();
 
   const [
@@ -56,17 +52,7 @@ export default async function LoyaltyPage({
         description="Points, tiers, manual adjustments, wallet balances and gift cards."
       />
 
-      {(params.error || accountsResult.error) && (
-        <p className="mt-5 rounded-xl border border-red-300 bg-red-50 p-4 text-red-700">
-          {params.error || accountsResult.error?.message}
-        </p>
-      )}
-
-      {params.success && (
-        <p className="mt-5 rounded-xl border border-green-300 bg-green-50 p-4 text-green-800">
-          {params.success}
-        </p>
-      )}
+      <ErrorPanel messages={[accountsResult.error?.message]} />
 
       <div className="mt-8 grid gap-6 xl:grid-cols-2">
         <section className="rounded-2xl border p-6">

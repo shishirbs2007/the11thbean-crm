@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/auth";
+import { ErrorPanel } from "@/components/notifications/error-panel";
 import { PageHeader } from "@/components/platform/page-header";
 
 export default async function StaffPage() {
@@ -19,11 +20,7 @@ export default async function StaffPage() {
         description="The current role registry for administrators, managers and baristas."
       />
 
-      {error && (
-        <p className="mt-5 rounded-xl border border-red-300 p-3 text-red-700">
-          {error.message}
-        </p>
-      )}
+      <ErrorPanel messages={[error?.message]} />
 
       <div className="mt-7 overflow-hidden rounded-2xl border">
         {roles.length === 0 ? (
