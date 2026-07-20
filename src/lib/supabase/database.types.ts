@@ -3369,6 +3369,59 @@ export type Database = {
           },
         ]
       }
+      system_incidents: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          area: string
+          context: Json
+          created_at: string
+          detail: string | null
+          dispatched_at: string | null
+          id: string
+          occurred_at: string
+          person_id: string | null
+          severity: string
+          summary: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          area: string
+          context?: Json
+          created_at?: string
+          detail?: string | null
+          dispatched_at?: string | null
+          id?: string
+          occurred_at?: string
+          person_id?: string | null
+          severity?: string
+          summary: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          area?: string
+          context?: Json
+          created_at?: string
+          detail?: string | null
+          dispatched_at?: string | null
+          id?: string
+          occurred_at?: string
+          person_id?: string | null
+          severity?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_incidents_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tags: {
         Row: {
           created_at: string
@@ -3938,6 +3991,14 @@ export type Database = {
         }
         Returns: string
       }
+      match_guest_detail: {
+        Args: { contact_email?: string; contact_phone?: string }
+        Returns: {
+          candidate_count: number
+          candidate_ids: string[]
+          person_id: string
+        }[]
+      }
       match_guest_for_import: {
         Args: { contact_email?: string; contact_phone?: string }
         Returns: string
@@ -3964,6 +4025,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      record_incident: {
+        Args: {
+          incident_area: string
+          incident_context?: Json
+          incident_detail?: string
+          incident_severity?: string
+          incident_summary: string
+          subject_person_id?: string
+        }
+        Returns: string
+      }
       refresh_customer_health: {
         Args: { p_person_id: string }
         Returns: undefined
@@ -3973,6 +4045,17 @@ export type Database = {
         Returns: string
       }
       run_due_automations: { Args: { triggered_by?: string }; Returns: number }
+      system_health_checks: {
+        Args: never
+        Returns: {
+          check_key: string
+          detail: string
+          drill_down_path: string
+          label: string
+          recommended_action: string
+          status: string
+        }[]
+      }
       upcoming_important_dates: {
         Args: { days_ahead?: number }
         Returns: {

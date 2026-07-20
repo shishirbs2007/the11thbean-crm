@@ -39,8 +39,13 @@ done
 
 docker info >/dev/null 2>&1 || fail "Docker is not running. Start Docker, then retry."
 
-NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]')"
-[ "$NODE_MAJOR" -ge 20 ] || fail "Node 20 or newer is required (found $(node -v))."
+# vitest 4 loads an ESM dependency from a CommonJS entry point, which needs
+# require(esm). That landed in Node 22.12; anything older fails at startup with
+# an error that does not mention the Node version.
+NODE_VERSION="$(node -p 'process.versions.node')"
+NODE_OK="$(node -p 'const [a,b]=process.versions.node.split(".").map(Number); (a>22||(a===22&&b>=12))?"yes":"no"')"
+[ "$NODE_OK" = "yes" ] \
+  || fail "Node 22.12 or newer is required (found v${NODE_VERSION}). See .nvmrc."
 
 log "Installing dependencies ..."
 npm ci >/dev/null 2>&1 || npm install >/dev/null

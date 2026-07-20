@@ -35,7 +35,12 @@ type UnmatchedItem = {
   id: string;
   external_id: string;
   reason: string;
-  payload: { phone?: string; email?: string; net_amount?: number };
+  payload: {
+    phone?: string;
+    email?: string;
+    net_amount?: number;
+    candidate_count?: number;
+  };
   created_at: string;
 };
 
@@ -165,7 +170,7 @@ export default async function IntegrationsPage() {
 
         <Section
           title="Orders without a guest"
-          description="The till knows about these but the CRM cannot tell whose they are. Adding the guest with this phone number will attach future orders automatically."
+          description="The till knows about these but the CRM cannot tell whose they are. Each one says whether the guest is missing or recorded twice."
         >
           {unmatched.length === 0 ? (
             <p className="text-neutral-600">
@@ -182,12 +187,22 @@ export default async function IntegrationsPage() {
                       ? ` · ₹${Math.round(item.payload.net_amount)}`
                       : ""}
                   </p>
-                  <Link
-                    href="/customers/new"
-                    className="mt-1 inline-block text-xs underline"
-                  >
-                    Add this guest
-                  </Link>
+                  <p className="mt-1 text-sm">{item.reason}</p>
+                  {(item.payload.candidate_count ?? 0) > 1 ? (
+                    <Link
+                      href={`/search?q=${encodeURIComponent(item.payload.phone ?? "")}`}
+                      className="mt-1 inline-block text-xs underline"
+                    >
+                      Find the duplicate records
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/customers/new"
+                      className="mt-1 inline-block text-xs underline"
+                    >
+                      Add this guest
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

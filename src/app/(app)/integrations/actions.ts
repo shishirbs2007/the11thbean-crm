@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireManager, requireUser } from "@/lib/auth";
 import { parseOrderCsv } from "@/lib/integrations/csv-orders";
+import { recordIncident } from "@/lib/monitoring/incidents";
 
 function back(params: string): never {
   redirect(`/integrations?${params}`);
@@ -36,6 +37,17 @@ export async function importOrderCsv(formData: FormData) {
 
   if (orders.length === 0) {
     const reason = rejected[0]?.reason ?? "No usable orders found in that file";
+
+    // A rejected export is invisible otherwise: the person who uploaded it
+    // sees a message and moves on, and nobody learns the till changed format.
+    await recordIncident(supabase, {
+      area: "import",
+      severity: "warning",
+      summary: "A till export could not be imported",
+      detail: reason,
+      context: { file_name: file.name, rejected_rows: rejected.length },
+    });
+
     back(`error=${encodeURIComponent(reason)}`);
   }
 
@@ -46,6 +58,14 @@ export async function importOrderCsv(formData: FormData) {
   });
 
   if (error) {
+    await recordIncident(supabase, {
+      area: "import",
+      severity: "error",
+      summary: "Order import failed",
+      detail: error.message,
+      context: { file_name: file.name, order_count: orders.length },
+    });
+
     back(`error=${encodeURIComponent(error.message)}`);
   }
 

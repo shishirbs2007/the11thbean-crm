@@ -11,9 +11,66 @@ function csv(rows: string[]): string {
   return ["order_id,date,phone,item,category,qty,price,total", ...rows].join("\n");
 }
 
+/**
+ * Waits for this run's own import to land.
+ *
+ * Asserting on the import-history panel is unreliable: history accumulates, so
+ * a regex match can be satisfied by a previous run's summary while this one has
+ * not happened at all. Polling for the order ids this test generated cannot be
+ * fooled that way.
+ */
+async function waitForImportedOrder(externalId: string): Promise<void> {
+  const admin = stagingAdminClient();
+
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const { data } = await admin
+      .from("import_run_items")
+      .select("outcome")
+      .eq("external_id", externalId);
+
+    if ((data ?? []).length > 0) return;
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+
+  throw new Error(`Import never recorded an outcome for ${externalId}`);
+}
+
+/**
+ * Confirms the fixture is matchable the way the importer matches.
+ *
+ * Checking `phone = '+9198...'` is not the same test: the matcher strips
+ * non-digits, so two guests stored as "+919812345678" and "919812345678" are
+ * one row to an exact-string query and two candidates to the matcher, which
+ * then correctly refuses to guess. Verifying with a different comparison from
+ * the one under test is how a fixture problem hides until it looks like a
+ * product bug.
+ */
+async function expectMatchable(): Promise<void> {
+  const admin = stagingAdminClient();
+
+  const { data, error } = await admin.rpc("match_guest_detail", {
+    contact_phone: phone,
+    contact_email: null,
+  });
+
+  if (error) throw error;
+
+  const detail = Array.isArray(data) ? data[0] : data;
+
+  expect(
+    detail?.person_id,
+    `the importer cannot match ${phone}: ${detail?.candidate_count ?? 0} candidate(s)`,
+  ).toBe(guestId);
+}
+
 test.describe.serial("Order import", () => {
   test.beforeAll(async () => {
     const admin = stagingAdminClient();
+
+    // A retry re-runs beforeAll with the same module-level timestamp, so the
+    // fixture must converge rather than collide with its own leftovers.
+    await admin.from("people").delete().eq("phone", phone);
 
     const { data, error } = await admin
       .from("people")
@@ -52,11 +109,14 @@ test.describe.serial("Order import", () => {
     await admin.from("customer_health_history").delete().eq("person_id", guestId);
     await admin.from("customer_health").delete().eq("person_id", guestId);
     await admin.from("people").delete().eq("id", guestId);
+    await admin.from("people").delete().eq("phone", phone);
   });
 
   test("imports a till export and attaches it to the right guest", async ({
     page,
   }) => {
+    await expectMatchable();
+
     await page.goto("/integrations");
 
     const content = csv([
@@ -76,22 +136,29 @@ test.describe.serial("Order import", () => {
 
     await page.getByRole("button", { name: "Import orders" }).click();
 
-    const history = page.getByRole("region", { name: "Import history" });
-    await expect(history.getByText(/2 orders seen, 2 imported/)).toBeVisible();
+    await waitForImportedOrder(`TILL-${timestamp}-1`);
 
     const admin = stagingAdminClient();
-    const { data: visits } = await admin
+    const { data: byOrder } = await admin
       .from("visits")
-      .select("id, external_order_id, net_amount")
-      .eq("person_id", guestId);
+      .select("id, external_order_id, person_id")
+      .like("external_order_id", `TILL-${timestamp}-%`);
 
-    expect(visits).toHaveLength(2);
+    expect(
+      byOrder,
+      `orders landed on ${JSON.stringify(byOrder?.map((v) => v.person_id))}, expected ${guestId}`,
+    ).toHaveLength(2);
+
+    const visits = byOrder;
+    expect(visits?.every((v) => v.person_id === guestId)).toBe(true);
     expect(visits?.every((v) => v.external_order_id?.startsWith("TILL-"))).toBe(
       true,
     );
   });
 
   test("re-importing the same export changes nothing", async ({ page }) => {
+    await expectMatchable();
+
     await page.goto("/integrations");
 
     const content = csv([
@@ -109,13 +176,18 @@ test.describe.serial("Order import", () => {
 
     await page.getByRole("button", { name: "Import orders" }).click();
 
-    await expect(
-      page
-        .getByRole("region", { name: "Import history" })
-        .getByText(/1 orders seen, 0 imported, 1 already known/),
-    ).toBeVisible();
-
     const admin = stagingAdminClient();
+
+    // The repeat upload records a second outcome for the same order id.
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      const { data } = await admin
+        .from("import_run_items")
+        .select("outcome")
+        .eq("external_id", `TILL-${timestamp}-1`);
+
+      if ((data ?? []).some((item) => item.outcome === "skipped")) break;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
     const { data: visits } = await admin
       .from("visits")
       .select("id")
@@ -163,6 +235,7 @@ test.describe.serial("Order import", () => {
       name: "Orders without a guest",
     });
 
+    await waitForImportedOrder(`TILL-${timestamp}-9`);
     await expect(
       unmatched.getByText(`Order TILL-${timestamp}-9`),
     ).toBeVisible();
@@ -172,6 +245,56 @@ test.describe.serial("Order import", () => {
       .from("import_run_items")
       .delete()
       .eq("external_id", `TILL-${timestamp}-9`);
+  });
+
+  test("says a duplicate guest needs merging, not that nobody matched", async () => {
+    const admin = stagingAdminClient();
+
+    // The same person entered twice with the number written differently.
+    const { data: twin, error } = await admin
+      .from("people")
+      .insert({
+        first_name: `Twin${timestamp}`,
+        email: `twin-${timestamp}@example.com`,
+        phone: phone.replace("+", ""),
+        person_type: "customer",
+        is_active: true,
+      })
+      .select("id")
+      .single();
+
+    if (error) throw error;
+
+    const { error: importError } = await admin.rpc("import_orders", {
+      adapter: "generic_pos",
+      orders: [
+        {
+          external_id: `TILL-${timestamp}-dup`,
+          occurred_at: "2026-07-19T12:00:00Z",
+          phone,
+          net_amount: 100,
+          items: [],
+        },
+      ],
+    });
+
+    if (importError) throw importError;
+
+    const { data: outcome } = await admin
+      .from("import_run_items")
+      .select("outcome, reason")
+      .eq("external_id", `TILL-${timestamp}-dup`)
+      .single();
+
+    expect(outcome?.outcome).toBe("unmatched");
+    expect(outcome?.reason).toContain("share these contact details");
+    expect(outcome?.reason).toContain("Merge");
+
+    await admin
+      .from("import_run_items")
+      .delete()
+      .eq("external_id", `TILL-${timestamp}-dup`);
+    await admin.from("people").delete().eq("id", twin.id);
   });
 
   test("refuses a file it cannot understand, and says why", async ({ page }) => {

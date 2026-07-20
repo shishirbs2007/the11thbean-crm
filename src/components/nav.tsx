@@ -42,6 +42,7 @@ const groups = [
       ["/integrations", "Integrations"],
       ["/tags", "Tags"],
       ["/staff", "Staff"],
+      ["/system", "System health"],
       ["/audit", "Audit"],
       ["/settings", "Settings"],
     ],
