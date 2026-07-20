@@ -151,3 +151,7 @@ VALIDATION_REPORT_*.txt
 MVP_BUILD_LOG_*.txt
 MVP_REPAIR_REPORT_*.txt
 FULL_EXPANSION_LOG_*.txt
+
+# Staging credentials, never committed
+.env.staging
+.env.staging.functions

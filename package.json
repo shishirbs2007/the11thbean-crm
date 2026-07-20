@@ -24,7 +24,11 @@
     "test:e2e:staging": "playwright test --config=playwright.staging.config.ts",
     "test:e2e:local": "bash ./scripts/test-local-e2e.sh",
     "supabase:start": "supabase start",
-    "supabase:stop": "supabase stop"
+    "supabase:stop": "supabase stop",
+    "test:guards": "bash ./tests/guards/environment-guard.test.sh",
+    "types:generate": "supabase gen types typescript --local > src/lib/supabase/database.types.ts",
+    "bootstrap:staging": "bash ./scripts/bootstrap-staging.sh",
+    "verify:staging": "bash ./scripts/verify-staging.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

@@ -1,130 +1,189 @@
 #!/usr/bin/env bash
 #
-# Provisions the staging Supabase project used by Preview deployments and the
-# write-enabled end-to-end suite.
+# Bootstraps the hosted staging environment.
 #
-# Staging is disposable. The regression suite creates and deletes records here
-# freely, which is exactly why it must never be the production project.
+#   npm run bootstrap:staging
 #
-# Usage:
-#   scripts/bootstrap-staging.sh
+# Every step is safe to repeat. Nothing here can touch production: the target
+# is checked against a denylist before a single command runs, and the guard
+# fails closed on anything it does not positively recognise as staging.
 #
-# Requires an authenticated Supabase CLI and an organisation slot free on the
-# current plan.
+# Credentials come from .env.staging (gitignored) or the environment. They are
+# never printed, never committed, and never written to a report.
 
 set -euo pipefail
 
-PROJECT_NAME="${STAGING_PROJECT_NAME:-the11thbean-crm-staging}"
-REGION="${STAGING_REGION:-ap-south-1}"
-STAFF_EMAIL="${CRM_TEST_USER_EMAIL:-bean@the11thbean.com}"
-PRODUCTION_REF="ehbkxldhajgcununyfat"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$REPO_ROOT"
 
-log() { printf '\033[1;32m[staging]\033[0m %s\n' "$1"; }
+# shellcheck source=scripts/lib/environment-guard.sh
+source "$REPO_ROOT/scripts/lib/environment-guard.sh"
+
+log()  { printf '\033[1;32m[staging]\033[0m %s\n' "$1"; }
+warn() { printf '\033[1;33m[staging]\033[0m %s\n' "$1" >&2; }
 fail() { printf '\033[1;31m[staging]\033[0m %s\n' "$1" >&2; exit 1; }
+step() { printf '\n\033[1m── %s\033[0m\n' "$1"; }
 
-command -v supabase >/dev/null || fail "Supabase CLI is not installed."
-command -v jq >/dev/null || fail "jq is required."
+ENV_FILE="$REPO_ROOT/.env.staging"
 
-ORG_ID="$(supabase orgs list -o json | jq -r '.[0].id')"
-[ -n "$ORG_ID" ] && [ "$ORG_ID" != "null" ] || fail "Could not resolve the Supabase organisation."
+step "Checking prerequisites"
+for tool in supabase jq curl npm; do
+  command -v "$tool" >/dev/null || fail "$tool is required but not installed."
+done
+log "All required tools present."
 
-# Reuse the project if a previous run already created it.
-EXISTING_REF="$(supabase projects list -o json \
-  | jq -r --arg name "$PROJECT_NAME" '.[] | select(.name == $name) | .ref' | head -n1)"
-
-if [ -n "$EXISTING_REF" ]; then
-  log "Reusing existing project $PROJECT_NAME ($EXISTING_REF)."
-  STAGING_REF="$EXISTING_REF"
+if [ -f "$ENV_FILE" ]; then
+  # shellcheck disable=SC1090
+  set -a && source "$ENV_FILE" && set +a
+  log "Loaded credentials from .env.staging"
 else
-  DB_PASS="$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 32)"
-
-  log "Creating $PROJECT_NAME in $REGION ..."
-  STAGING_REF="$(supabase projects create "$PROJECT_NAME" \
-    --org-id "$ORG_ID" \
-    --region "$REGION" \
-    --db-password "$DB_PASS" \
-    -o json | jq -r '.id')"
-
-  [ -n "$STAGING_REF" ] && [ "$STAGING_REF" != "null" ] \
-    || fail "Project creation failed. A free plan allows two active projects per organisation."
-
-  log "Created $STAGING_REF. Store this database password somewhere safe:"
-  printf '  %s\n' "$DB_PASS"
+  warn ".env.staging not found; relying on the current environment."
 fi
 
-[ "$STAGING_REF" != "$PRODUCTION_REF" ] \
-  || fail "Refusing to continue: resolved ref is the production project."
+: "${SUPABASE_ACCESS_TOKEN:?SUPABASE_ACCESS_TOKEN is required (personal access token for the staging account)}"
+: "${STAGING_PROJECT_REF:?STAGING_PROJECT_REF is required}"
 
-log "Waiting for the project to become healthy ..."
-for _ in $(seq 1 60); do
-  STATUS="$(supabase projects list -o json \
-    | jq -r --arg ref "$STAGING_REF" '.[] | select(.ref == $ref) | .status')"
-  [ "$STATUS" = "ACTIVE_HEALTHY" ] && break
-  sleep 10
-done
-[ "$STATUS" = "ACTIVE_HEALTHY" ] || fail "Project did not become healthy in time (status: $STATUS)."
+step "Verifying the target is not production"
+require_valid_ref "$STAGING_PROJECT_REF"
+CRM_ENVIRONMENT=staging require_non_production "$STAGING_PROJECT_REF" "staging bootstrap"
 
-log "Applying migrations ..."
-supabase link --project-ref "$STAGING_REF" >/dev/null
+# Confirm the reference actually belongs to the authenticated account, so a
+# typo cannot silently point at somebody else's project.
+PROJECT_NAME="$(supabase projects list -o json 2>/dev/null \
+  | jq -r --arg ref "$STAGING_PROJECT_REF" \
+      '.[] | select(.ref == $ref) | .name' | head -n1)"
+
+[ -n "$PROJECT_NAME" ] \
+  || fail "Project $STAGING_PROJECT_REF is not visible to this Supabase account."
+
+log "Target project: $PROJECT_NAME ($STAGING_PROJECT_REF)"
+
+STAGING_URL="https://${STAGING_PROJECT_REF}.supabase.co"
+
+step "Linking the Supabase CLI to staging"
+LINK_ARGS=(link --project-ref "$STAGING_PROJECT_REF")
+[ -n "${STAGING_DB_PASSWORD:-}" ] && LINK_ARGS+=(--password "$STAGING_DB_PASSWORD")
+supabase "${LINK_ARGS[@]}" </dev/null >/dev/null
+log "Linked."
+
+step "Applying migrations"
 supabase db push --linked --include-all </dev/null
+log "All migrations applied."
 
-STAGING_URL="https://${STAGING_REF}.supabase.co"
-SERVICE_KEY="$(supabase projects api-keys --project-ref "$STAGING_REF" -o json \
-  | jq -r '.[] | select(.name == "service_role") | .api_key')"
-ANON_KEY="$(supabase projects api-keys --project-ref "$STAGING_REF" -o json \
-  | jq -r '.[] | select(.name == "anon") | .api_key')"
+step "Reading staging API keys"
+KEYS_JSON="$(supabase projects api-keys --project-ref "$STAGING_PROJECT_REF" -o json)"
+ANON_KEY="$(jq -r '.[] | select(.name == "anon") | .api_key' <<<"$KEYS_JSON")"
+SERVICE_KEY="$(jq -r '.[] | select(.name == "service_role") | .api_key' <<<"$KEYS_JSON")"
 
+[ -n "$ANON_KEY" ] && [ "$ANON_KEY" != "null" ] || fail "Could not read the staging anon key."
 [ -n "$SERVICE_KEY" ] && [ "$SERVICE_KEY" != "null" ] || fail "Could not read the staging service-role key."
+log "Keys retrieved. (Values are never printed.)"
 
-log "Creating the synthetic staff user $STAFF_EMAIL ..."
+step "Storage buckets"
+# The CRM uses no Storage buckets today. This step is declarative: when a
+# bucket is introduced, add it here so a blank project reproduces it.
+BUCKETS=()
+if [ "${#BUCKETS[@]}" -eq 0 ]; then
+  log "No buckets required by the current schema."
+else
+  for bucket in "${BUCKETS[@]}"; do
+    curl -fsS -X POST "${STAGING_URL}/storage/v1/bucket" \
+      -H "apikey: ${SERVICE_KEY}" \
+      -H "Authorization: Bearer ${SERVICE_KEY}" \
+      -H "Content-Type: application/json" \
+      -d "$(jq -nc --arg id "$bucket" '{id: $id, name: $id, public: false}')" \
+      >/dev/null 2>&1 || warn "Bucket $bucket may already exist."
+    log "Bucket ready: $bucket"
+  done
+fi
+
+step "Edge Functions"
+if [ -d "$REPO_ROOT/supabase/functions" ] && \
+   [ -n "$(ls -A "$REPO_ROOT/supabase/functions" 2>/dev/null)" ]; then
+  for fn in "$REPO_ROOT"/supabase/functions/*/; do
+    name="$(basename "$fn")"
+    log "Deploying $name ..."
+    supabase functions deploy "$name" --project-ref "$STAGING_PROJECT_REF" </dev/null
+  done
+
+  if [ -f "$REPO_ROOT/.env.staging.functions" ]; then
+    log "Uploading Edge Function secrets ..."
+    supabase secrets set --env-file "$REPO_ROOT/.env.staging.functions" \
+      --project-ref "$STAGING_PROJECT_REF" </dev/null >/dev/null
+  fi
+else
+  log "No Edge Functions in this repository."
+fi
+
+step "Seeding synthetic data"
+DB_URL="postgresql://postgres.${STAGING_PROJECT_REF}:${STAGING_DB_PASSWORD:-}@aws-0-ap-south-1.pooler.supabase.com:5432/postgres"
+
+if [ -n "${STAGING_DB_PASSWORD:-}" ]; then
+  psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$REPO_ROOT/supabase/seed-staging.sql" 2>&1 \
+    | grep -E "NOTICE|ERROR" || true
+else
+  warn "STAGING_DB_PASSWORD not set; seeding through the REST API instead."
+  curl -fsS -X POST "${STAGING_URL}/rest/v1/rpc/exec_seed" \
+    -H "apikey: ${SERVICE_KEY}" -H "Authorization: Bearer ${SERVICE_KEY}" \
+    >/dev/null 2>&1 \
+    || warn "Could not seed automatically. Run: psql <staging-url> -f supabase/seed-staging.sql"
+fi
+
+step "Generating database types"
+supabase gen types typescript --project-id "$STAGING_PROJECT_REF" \
+  > "$REPO_ROOT/src/lib/supabase/database.types.ts"
+log "Types written to src/lib/supabase/database.types.ts"
+
+step "Creating the staging staff user"
+STAFF_EMAIL="${CRM_TEST_USER_EMAIL:-bean@the11thbean.com}"
+
 USER_ID="$(curl -fsS -X POST "${STAGING_URL}/auth/v1/admin/users" \
-  -H "apikey: ${SERVICE_KEY}" \
-  -H "Authorization: Bearer ${SERVICE_KEY}" \
+  -H "apikey: ${SERVICE_KEY}" -H "Authorization: Bearer ${SERVICE_KEY}" \
   -H "Content-Type: application/json" \
   -d "$(jq -nc --arg email "$STAFF_EMAIL" \
-        '{email: $email, email_confirm: true, user_metadata: {display_name: "Staging Test Staff"}}')" \
-  | jq -r '.id')"
+        '{email: $email, email_confirm: true, user_metadata: {display_name: "Staging Staff"}}')" \
+  2>/dev/null | jq -r '.id // empty' || true)"
 
-# A rerun against an existing user is not an error; look the account up instead.
-if [ -z "$USER_ID" ] || [ "$USER_ID" = "null" ]; then
+if [ -z "$USER_ID" ]; then
   USER_ID="$(curl -fsS "${STAGING_URL}/auth/v1/admin/users" \
     -H "apikey: ${SERVICE_KEY}" -H "Authorization: Bearer ${SERVICE_KEY}" \
-    | jq -r --arg email "$STAFF_EMAIL" '.users[] | select(.email == $email) | .id' | head -n1)"
+    | jq -r --arg email "$STAFF_EMAIL" \
+        '.users[] | select(.email == $email) | .id' | head -n1)"
 fi
 
-[ -n "$USER_ID" ] && [ "$USER_ID" != "null" ] || fail "Could not create or find the staff user."
+[ -n "$USER_ID" ] || fail "Could not create or find the staging staff user."
 
-log "Granting the admin role ..."
-curl -fsS -X POST "${STAGING_URL}/rest/v1/app_roles" \
-  -H "apikey: ${SERVICE_KEY}" \
-  -H "Authorization: Bearer ${SERVICE_KEY}" \
-  -H "Content-Type: application/json" \
-  -H "Prefer: resolution=merge-duplicates" \
-  -d "$(jq -nc --arg id "$USER_ID" '{user_id: $id, role: "admin", is_active: true}')" >/dev/null
+ROLE_STATUS="$(curl -sS -o /dev/null -w '%{http_code}' \
+  -X POST "${STAGING_URL}/rest/v1/app_roles?on_conflict=user_id" \
+  -H "apikey: ${SERVICE_KEY}" -H "Authorization: Bearer ${SERVICE_KEY}" \
+  -H "Content-Type: application/json" -H "Prefer: resolution=merge-duplicates" \
+  -d "$(jq -nc --arg id "$USER_ID" '{user_id: $id, role: "admin", is_active: true}')")"
+
+case "$ROLE_STATUS" in
+  2*) log "Staff user ready: $STAFF_EMAIL (admin)" ;;
+  *)  fail "Could not grant the admin role (HTTP ${ROLE_STATUS})." ;;
+esac
+
+step "Verifying"
+CRM_ENVIRONMENT=staging \
+STAGING_PROJECT_REF="$STAGING_PROJECT_REF" \
+STAGING_SUPABASE_URL="$STAGING_URL" \
+STAGING_ANON_KEY="$ANON_KEY" \
+STAGING_SERVICE_KEY="$SERVICE_KEY" \
+  bash "$REPO_ROOT/scripts/verify-staging.sh"
 
 cat <<SUMMARY
 
 $(log "Staging is ready.")
 
-  Project ref   ${STAGING_REF}
-  URL           ${STAGING_URL}
-  Staff user    ${STAFF_EMAIL} (admin)
+  Project        ${PROJECT_NAME} (${STAGING_PROJECT_REF})
+  URL            ${STAGING_URL}
+  Staff user     ${STAFF_EMAIL}
 
-Point Vercel Preview — and only Preview — at this project:
+  Next:
+    npm run verify:staging     re-run the non-destructive checks
+    vercel env ...             point Preview at this project
 
-  vercel env add NEXT_PUBLIC_SUPABASE_URL preview
-  vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY preview
-  vercel env add SUPABASE_SERVICE_ROLE_KEY preview
-
-Anon key:
-${ANON_KEY}
-
-Then run the regression suite against a Preview deployment:
-
-  PLAYWRIGHT_BASE_URL="https://<preview>.vercel.app" \\
-  NEXT_PUBLIC_SUPABASE_URL="${STAGING_URL}" \\
-  CRM_E2E_ALLOW_WRITES=true \\
-  CRM_E2E_ENVIRONMENT=staging \\
-  npm run test:e2e:staging
+  Production was not contacted by this script.
 
 SUMMARY
