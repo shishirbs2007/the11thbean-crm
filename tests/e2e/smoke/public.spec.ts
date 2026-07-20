@@ -42,6 +42,7 @@ test.describe("Public production surface", () => {
     "/intelligence",
     "/audiences",
     "/campaigns",
+    "/automations",
     "/dashboard",
     "/search",
     "/customers",

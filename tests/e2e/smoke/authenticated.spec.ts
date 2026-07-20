@@ -5,6 +5,7 @@ const pages = [
   ["/intelligence", "How the café is doing"],
   ["/audiences", "Audiences"],
   ["/campaigns", "Campaigns"],
+  ["/automations", "Hospitality automations"],
   ["/dashboard", "Dashboard"],
   ["/search", "Global search"],
   ["/customers", "Customers"],
