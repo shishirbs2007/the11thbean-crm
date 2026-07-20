@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint src tests vitest.config.ts playwright.production.config.ts",
+    "lint": "eslint src tests vitest.config.ts playwright.shared.ts playwright.production.config.ts playwright.staging.config.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:unit": "vitest run",
@@ -14,12 +14,14 @@
     "test:unit:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "test:public": "playwright test --config=playwright.production.config.ts --project=public",
-    "test:auth": "playwright test --config=playwright.production.config.ts --project=authenticated",
-    "test:e2e": "playwright test --config=playwright.production.config.ts",
+    "test:auth": "npm run test:auth:smoke",
     "test:db": "node tests/database/integrity.mjs",
     "test:report": "playwright show-report",
     "validate": "bash ./validate-production.sh",
-    "validate:production": "bash ./validate-production.sh"
+    "validate:production": "bash ./validate-production.sh",
+    "test:auth:smoke": "playwright test --config=playwright.production.config.ts --project=auth-smoke",
+    "test:smoke": "playwright test --config=playwright.production.config.ts",
+    "test:e2e:staging": "playwright test --config=playwright.staging.config.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

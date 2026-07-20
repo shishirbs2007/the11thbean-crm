@@ -1,29 +1,14 @@
-import { createClient } from "@supabase/supabase-js";
 import { expect, test } from "@playwright/test";
+
+import { stagingAdminClient } from "../support/environment";
 
 const timestamp = Date.now();
 const email = `health-${timestamp}@example.com`;
 let personId = "";
 
-function adminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !key) {
-    throw new Error("Supabase service credentials are required.");
-  }
-
-  return createClient(url, key, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
-
 test.describe.serial("Customer health intelligence", () => {
   test.beforeAll(async () => {
-    const admin = adminClient();
+    const admin = stagingAdminClient();
 
     const { data: person, error: personError } = await admin
       .from("people")
@@ -108,7 +93,7 @@ test.describe.serial("Customer health intelligence", () => {
   }
 
   test.afterAll(async () => {
-    const admin = adminClient();
+    const admin = stagingAdminClient();
 
     if (!personId) return;
 

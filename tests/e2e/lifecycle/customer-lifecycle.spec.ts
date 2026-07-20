@@ -1,31 +1,14 @@
-import { createClient } from "@supabase/supabase-js";
 import { expect, test } from "@playwright/test";
+
+import { stagingAdminClient } from "../support/environment";
 
 const timestamp = Date.now();
 const firstName = `Regression${timestamp}`;
 const email = `regression-${timestamp}@example.com`;
 
-function adminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !key) {
-    throw new Error(
-      "Supabase service credentials are required.",
-    );
-  }
-
-  return createClient(url, key, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
-
 test.describe.serial("Customer lifecycle", () => {
   test.afterAll(async () => {
-    const admin = adminClient();
+    const admin = stagingAdminClient();
 
     const { data: people } = await admin
       .from("people")

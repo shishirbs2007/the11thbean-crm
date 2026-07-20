@@ -52,7 +52,7 @@ run "Production build" npm run build
 run "Public browser tests" npm run test:public
 
 if [[ -n "${SUPABASE_SERVICE_ROLE_KEY:-}" ]]; then
-  run "Authenticated browser tests" npm run test:auth
+  run "Authenticated smoke tests" npm run test:auth:smoke
   run "Database integrity" npm run test:db
 else
   section "Authenticated tests"

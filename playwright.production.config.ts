@@ -1,68 +1,38 @@
 import { loadEnvConfig } from "@next/env";
-import { defineConfig, devices } from "@playwright/test";
+
+import { baseConfig, chrome, defineConfig } from "./playwright.shared";
 
 loadEnvConfig(process.cwd());
 
+/**
+ * Production smoke suite.
+ *
+ * Confirms availability, authentication, route rendering and critical reads
+ * against the live site. Nothing here creates, edits or deletes business data;
+ * the write-enabled regression suite runs against staging only.
+ */
 const baseURL =
-  process.env.PLAYWRIGHT_BASE_URL ||
-  "https://the11thbean-crm.vercel.app";
+  process.env.PLAYWRIGHT_BASE_URL || "https://the11thbean-crm.vercel.app";
 
 export default defineConfig({
-  testDir: "./tests/e2e",
-  outputDir: "test-results",
-  fullyParallel: false,
-  forbidOnly: Boolean(process.env.CI),
-  retries: process.env.CI ? 2 : 1,
-  workers: 1,
-  timeout: 45_000,
-  expect: {
-    timeout: 10_000,
-  },
-  reporter: [
-    ["list"],
-    [
-      "html",
-      {
-        outputFolder: "playwright-report",
-        open: "never",
-      },
-    ],
-    [
-      "junit",
-      {
-        outputFile: "test-results/results.xml",
-      },
-    ],
-  ],
-  use: {
-    baseURL,
-    actionTimeout: 15_000,
-    navigationTimeout: 30_000,
-    screenshot: "only-on-failure",
-    trace: "retain-on-failure",
-    video: "retain-on-failure",
-  },
+  ...baseConfig(baseURL),
   projects: [
     {
       name: "public",
-      testMatch: /public\.spec\.ts/,
-      use: {
-        ...devices["Desktop Chrome"],
-      },
+      testMatch: /smoke\/public\.spec\.ts/,
+      use: { ...chrome },
     },
     {
       name: "auth-setup",
       testMatch: /auth\.setup\.ts/,
-      use: {
-        ...devices["Desktop Chrome"],
-      },
+      use: { ...chrome },
     },
     {
-      name: "authenticated",
+      name: "auth-smoke",
       dependencies: ["auth-setup"],
-      testIgnore: /public\.spec\.ts/,
+      testMatch: /smoke\/authenticated\.spec\.ts/,
       use: {
-        ...devices["Desktop Chrome"],
+        ...chrome,
         storageState: "playwright/.auth/user.json",
       },
     },
