@@ -104,7 +104,7 @@ answer a question about one.
   having one definition per rule.
 - `business_period_facts` runs many correlated subqueries in one statement. It
   is the most expensive query in the application and the first materialization
-  candidate. See `docs/ANALYTICS.md`.
+  candidate. See `docs/analytics.md`.
 - Nothing is materialized today. That is a choice, not an oversight: an
   aggregate whose age is invisible will eventually be trusted when it should
   not be.

@@ -142,6 +142,6 @@ $(log "The 11th Bean CRM is built and verified.")
   Sign-in is by magic link. With the local stack, the email is captured by
   Mailpit at http://127.0.0.1:54324 rather than being delivered.
 
-  Nothing here touches production. See docs/WORKFLOW.md before deploying.
+  Nothing here touches production. See docs/workflow.md before deploying.
 
 SUMMARY

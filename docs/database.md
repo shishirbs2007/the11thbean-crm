@@ -91,7 +91,7 @@ Every table has RLS enabled. Staff read broadly; managers and admins write.
 ## Functions
 
 Intelligence lives here rather than in application code, so every question
-has exactly one answer. See `docs/ARCHITECTURE.md`.
+has exactly one answer. See `docs/architecture.md`.
 
 - `adapter_for_capability()`
 - `add_customer_timeline_event()`

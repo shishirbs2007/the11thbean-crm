@@ -22,7 +22,7 @@ verification suite. It never touches production.
 
 ## Deploying
 
-Follow `docs/WORKFLOW.md`. In short:
+Follow `docs/workflow.md`. In short:
 
 ```bash
 npm run lint && npm run typecheck && npm run test:unit && npm run build
