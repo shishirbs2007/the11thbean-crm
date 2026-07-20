@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NavMenu } from "@/components/nav-menu";
 
 const primary = [
+  ["/arrival", "Arrival"],
   ["/briefing", "Today"],
   ["/dashboard", "Dashboard"],
   ["/search", "Search"],

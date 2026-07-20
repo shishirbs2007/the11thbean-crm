@@ -1080,6 +1080,13 @@ export type Database = {
             foreignKeyName: "customer_feedback_visit_id_fkey"
             columns: ["visit_id"]
             isOneToOne: false
+            referencedRelation: "arrivals_today"
+            referencedColumns: ["visit_id"]
+          },
+          {
+            foreignKeyName: "customer_feedback_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
             referencedRelation: "visits"
             referencedColumns: ["id"]
           },
@@ -2260,6 +2267,13 @@ export type Database = {
             foreignKeyName: "import_run_items_visit_id_fkey"
             columns: ["visit_id"]
             isOneToOne: false
+            referencedRelation: "arrivals_today"
+            referencedColumns: ["visit_id"]
+          },
+          {
+            foreignKeyName: "import_run_items_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
             referencedRelation: "visits"
             referencedColumns: ["id"]
           },
@@ -2821,6 +2835,13 @@ export type Database = {
             foreignKeyName: "order_items_visit_id_fkey"
             columns: ["visit_id"]
             isOneToOne: false
+            referencedRelation: "arrivals_today"
+            referencedColumns: ["visit_id"]
+          },
+          {
+            foreignKeyName: "order_items_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
             referencedRelation: "visits"
             referencedColumns: ["id"]
           },
@@ -3038,6 +3059,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_visit_history_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "arrivals_today"
+            referencedColumns: ["visit_id"]
           },
           {
             foreignKeyName: "pet_visit_history_visit_id_fkey"
@@ -3541,6 +3569,13 @@ export type Database = {
             foreignKeyName: "visit_items_visit_id_fkey"
             columns: ["visit_id"]
             isOneToOne: false
+            referencedRelation: "arrivals_today"
+            referencedColumns: ["visit_id"]
+          },
+          {
+            foreignKeyName: "visit_items_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
             referencedRelation: "visits"
             referencedColumns: ["id"]
           },
@@ -3650,6 +3685,28 @@ export type Database = {
       }
     }
     Views: {
+      arrivals_today: {
+        Row: {
+          greeting_name: string | null
+          is_new_guest: boolean | null
+          last_name: string | null
+          party_size: number | null
+          person_id: string | null
+          staff_notes: string | null
+          total_visits: number | null
+          visit_id: string | null
+          visited_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visits_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_outcomes: {
         Row: {
           campaign_id: string | null
@@ -3778,6 +3835,7 @@ export type Database = {
         }
         Returns: string
       }
+      arrival_context: { Args: { target_person_id: string }; Returns: Json }
       audience_rule_members: {
         Args: {
           days?: number
@@ -4005,6 +4063,15 @@ export type Database = {
       }
       next_best_action: { Args: { target_person_id: string }; Returns: Json }
       platform_overview: { Args: never; Returns: Json }
+      quick_add_guest: {
+        Args: {
+          contact_email?: string
+          contact_phone?: string
+          guest_count?: number
+          guest_name: string
+        }
+        Returns: Json
+      }
       recalculate_customer_health: {
         Args: { target_person_id?: string }
         Returns: number
@@ -4016,6 +4083,14 @@ export type Database = {
           is_healthy: boolean
         }
         Returns: undefined
+      }
+      record_arrival: {
+        Args: {
+          arrival_note?: string
+          guest_count?: number
+          target_person_id: string
+        }
+        Returns: Json
       }
       record_event_attendance: {
         Args: {
