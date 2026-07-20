@@ -2207,6 +2207,123 @@ export type Database = {
           },
         ]
       }
+      import_run_items: {
+        Row: {
+          created_at: string
+          external_id: string
+          id: string
+          outcome: string
+          payload: Json
+          person_id: string | null
+          reason: string
+          run_id: string
+          visit_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          external_id: string
+          id?: string
+          outcome: string
+          payload?: Json
+          person_id?: string | null
+          reason: string
+          run_id: string
+          visit_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          external_id?: string
+          id?: string
+          outcome?: string
+          payload?: Json
+          person_id?: string | null
+          reason?: string
+          run_id?: string
+          visit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_run_items_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "import_run_items_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "import_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "import_run_items_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_runs: {
+        Row: {
+          adapter_key: string
+          branch_id: string | null
+          finished_at: string | null
+          guests_matched: number
+          guests_unmatched: number
+          id: string
+          orders_failed: number
+          orders_imported: number
+          orders_seen: number
+          orders_skipped: number
+          started_at: string
+          status: string
+          summary: string | null
+          triggered_by: string | null
+        }
+        Insert: {
+          adapter_key: string
+          branch_id?: string | null
+          finished_at?: string | null
+          guests_matched?: number
+          guests_unmatched?: number
+          id?: string
+          orders_failed?: number
+          orders_imported?: number
+          orders_seen?: number
+          orders_skipped?: number
+          started_at?: string
+          status?: string
+          summary?: string | null
+          triggered_by?: string | null
+        }
+        Update: {
+          adapter_key?: string
+          branch_id?: string | null
+          finished_at?: string | null
+          guests_matched?: number
+          guests_unmatched?: number
+          id?: string
+          orders_failed?: number
+          orders_imported?: number
+          orders_seen?: number
+          orders_skipped?: number
+          started_at?: string
+          status?: string
+          summary?: string | null
+          triggered_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_runs_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       important_dates: {
         Row: {
           created_at: string
@@ -3811,6 +3928,19 @@ export type Database = {
           strength: number
           weight: number
         }[]
+      }
+      import_orders: {
+        Args: {
+          actor?: string
+          adapter: string
+          orders: Json
+          target_branch_id?: string
+        }
+        Returns: string
+      }
+      match_guest_for_import: {
+        Args: { contact_email?: string; contact_phone?: string }
+        Returns: string
       }
       next_best_action: { Args: { target_person_id: string }; Returns: Json }
       platform_overview: { Args: never; Returns: Json }
