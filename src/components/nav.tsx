@@ -17,6 +17,7 @@ const groups = [
   {
     label: "Intelligence",
     links: [
+      ["/intelligence", "Business"],
       ["/insights", "Insights"],
       ["/segments", "Segments"],
       ["/loyalty", "Loyalty"],
