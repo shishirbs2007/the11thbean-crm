@@ -33,54 +33,19 @@ feature branch
 
 CI never deploys production. Promotion is always a deliberate human action.
 
-## Sequence
+## Adding a route to the production smoke suite
 
-1. Implement the feature
-2. `npm run lint`
-3. `npm run typecheck`
-4. `npm run test:unit`
-5. `npm run build`
-6. `npm run test:e2e:local` — full write-enabled lifecycle suite against local
-   Next.js plus local Supabase
-7. Fix and repeat from step 2 until green
-8. Deploy a Vercel Preview for read-only UI and route verification
-9. Deploy to production: `vercel deploy --prod`
-10. `npm run test:smoke` — read-only production smoke suite
+The smoke suite verifies **production**. A new route belongs in it only once
+production actually serves it, so the order is:
 
-## Environments
+1. Build and verify the route on staging
+2. Promote to production
+3. Add the route to `tests/e2e/smoke/` in the same change as the promotion
 
-| Environment | Application | Supabase project | Data |
-| --- | --- | --- | --- |
-| Local | `next start` on port 3100 | local stack on 54321 | disposable |
-| Preview | preview deployment | production (read-only use) | not written to |
-| Production | production deployment | production | real customer records |
+Adding it earlier turns the suite red for a reason that has nothing to do with
+production health, which trains people to ignore it.
 
-The local Supabase stack is built from the same migrations as production, so
-the lifecycle suite exercises the real schema.
-
-Vercel Preview currently shares the production Supabase project, so Preview is
-used only for read-only UI and route verification. No write-enabled suite runs
-against it.
-
-## After 10 August 2026
-
-Once a free project slot is available:
-
-1. Pause `Aanu_Registry`
-2. Run `scripts/bootstrap-staging.sh` to create `the11thbean-crm-staging`,
-   apply every migration and configure the synthetic staff user
-3. Point Vercel **Preview** environment variables at staging, leaving
-   **Production** untouched
-4. Run `npm run test:e2e:staging` against a Preview deployment
-
-At that point step 6 above moves to Preview plus staging, and the target table
-becomes:
-
-| Environment | Application | Supabase project |
-| --- | --- | --- |
-| Local | `next start` | local stack |
-| Preview | preview deployment | staging |
-| Production | production deployment | production |
+**Awaiting promotion:** `/system` (operational monitoring).
 
 ## Test suites
 
@@ -92,6 +57,8 @@ becomes:
 | `npm run test:smoke` | production | no |
 | `npm run test:e2e:local` | local app + local Supabase | yes |
 | `npm run test:e2e:staging` | Preview + staging | yes |
+| `npm run test:guards` | none | no |
+| `npm run validate` | local only | yes |
 
 `test:public` and `test:auth:smoke` are smoke tests. They confirm
 availability, authentication, route rendering and critical read operations.
@@ -129,6 +96,9 @@ hold:
 1. `CRM_E2E_ALLOW_WRITES` is exactly `true`
 2. `CRM_E2E_ENVIRONMENT` is `local` or `staging`
 3. `NEXT_PUBLIC_SUPABASE_URL` is not the production project
+
+Setting both flags while leaving production credentials in place still
+refuses. `npm run test:guards` covers that case explicitly.
 
 The check runs in Playwright's global setup, so a misconfigured run aborts
 before a browser starts. It is enforced again inside `stagingAdminClient()`,

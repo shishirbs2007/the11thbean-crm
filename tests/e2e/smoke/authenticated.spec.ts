@@ -24,7 +24,6 @@ const pages = [
   ["/integrations", "Integrations"],
   ["/tags", "Customer tags"],
   ["/staff", "Staff roles"],
-  ["/system", "Is this working?"],
   ["/audit", "Audit trail"],
   ["/settings", "Settings"],
 ] as const;

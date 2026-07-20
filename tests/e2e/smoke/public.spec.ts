@@ -61,7 +61,6 @@ test.describe("Public production surface", () => {
     "/integrations",
     "/tags",
     "/staff",
-    "/system",
     "/audit",
     "/settings",
   ];
