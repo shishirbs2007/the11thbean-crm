@@ -21,7 +21,7 @@
     "validate:production": "bash ./validate-production.sh",
     "test:auth:smoke": "playwright test --config=playwright.production.config.ts --project=auth-smoke",
     "test:smoke": "playwright test --config=playwright.production.config.ts",
-    "test:e2e:staging": "playwright test --config=playwright.staging.config.ts",
+    "test:e2e:staging": "bash ./scripts/test-staging-e2e.sh",
     "test:e2e:local": "bash ./scripts/test-local-e2e.sh",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",

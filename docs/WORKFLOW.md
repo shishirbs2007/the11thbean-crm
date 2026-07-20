@@ -3,7 +3,37 @@
 Feature work is never deployed to production before it has been verified
 end to end. The sequence below is the only supported path to production.
 
-## Current sequence (until a hosted staging database exists)
+## Environment map
+
+| Environment | Application | Supabase project | Data |
+| --- | --- | --- | --- |
+| Local | `next start` on 3100 | local stack on 54321 | disposable |
+| Staging | Vercel Preview (`staging` branch) | `mirlfxruneqcgrwpqzvp` (separate account) | synthetic only |
+| Production | Vercel Production (`main`) | `ehbkxldhajgcununyfat` | real guest records |
+
+The staging Supabase project lives in a **different Supabase account** from
+production. Its access token cannot see the production project at all, so a
+misconfigured staging command has nothing to hit.
+
+## Release flow
+
+```
+feature branch
+  → npm run lint / typecheck / test:unit / test:guards / build
+  → npm run test:e2e:local          write-enabled, local stack
+  → merge to staging
+  → vercel deploy                   hosted preview, staging database
+  → npm run test:e2e:staging        write-enabled, hosted staging
+  → npm run verify:staging          non-destructive staging checks
+  → explicit human promotion to production
+  → supabase db push --linked       production migrations
+  → vercel --prod
+  → npm run test:smoke              read-only production verification
+```
+
+CI never deploys production. Promotion is always a deliberate human action.
+
+## Sequence
 
 1. Implement the feature
 2. `npm run lint`

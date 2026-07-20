@@ -1,12 +1,113 @@
-name: Quality checks
+name: Quality
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "staging"]
   pull_request:
 
+# Production is never deployed by CI. Promotion is a deliberate human action,
+# documented in docs/WORKFLOW.md.
+permissions:
+  contents: read
+
 jobs:
-  build:
+  verify:
+    name: Lint, types, unit tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Environment safety guards
+        run: npm run test:guards
+
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:unit
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: build-time-placeholder
+
+  migrations:
+    name: Migrations apply to an empty database
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - run: npm ci
+
+      - name: Start a blank Supabase stack
+        run: supabase start
+
+      # Proves the repository can rebuild its own database from nothing. This
+      # is the check that would have caught the missing role grants.
+      - name: Apply every migration from empty
+        run: supabase db reset --local
+
+      - name: Migrations are repeatable
+        run: supabase migration up --local
+
+      - name: Seed is idempotent
+        run: |
+          CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -1)"
+          docker exec -i "$CONTAINER" psql -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 < supabase/seed-staging.sql
+          docker exec -i "$CONTAINER" psql -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 < supabase/seed-staging.sql
+
+      - name: Generated types are current
+        run: |
+          supabase gen types typescript --local > /tmp/types.ts
+          if ! diff -q /tmp/types.ts src/lib/supabase/database.types.ts >/dev/null; then
+            echo "::error::Database types are stale. Run: npm run types:generate"
+            diff /tmp/types.ts src/lib/supabase/database.types.ts | head -40
+            exit 1
+          fi
+
+  e2e:
+    name: End-to-end against a local stack
+    runs-on: ubuntu-latest
+    needs: [verify, migrations]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      - name: Full write-enabled suite
+        run: npm run test:e2e:local
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  audit:
+    name: Dependency audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,5 +116,6 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
-      - run: npm run lint
-      - run: npm run build
+      # High and critical fail the build. Moderate is reported but tolerated,
+      # because the only currently-offered remedy is a major Next.js downgrade.
+      - run: npm audit --omit=dev --audit-level=high
