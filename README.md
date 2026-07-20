@@ -105,6 +105,8 @@ See [docs/architecture.md](docs/architecture.md).
 | [security.md](docs/security.md) | Threat model, RLS, consent, secrets |
 | [analytics.md](docs/analytics.md) | Metric ownership and materialisation |
 | [integrations.md](docs/integrations.md) | The adapter contract |
+| [handover.md](docs/handover.md) | Engineering handover: what, how, what next |
+| [production-readiness.md](docs/production-readiness.md) | Readiness assessment and risks |
 
 ## Contributing
 
