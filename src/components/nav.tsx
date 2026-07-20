@@ -29,6 +29,8 @@ const groups = [
       ["/communities", "Communities"],
       ["/events", "Events"],
       ["/communications", "Communications"],
+      ["/audiences", "Audiences"],
+      ["/campaigns", "Campaigns"],
     ],
   },
   {
