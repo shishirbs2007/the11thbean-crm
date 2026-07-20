@@ -1,4 +1,9 @@
 import { requireUser } from "@/lib/auth";
+import { PageHeader } from "@/components/platform/page-header";
+import {
+  communityStatus,
+  type CommunityHealthRow,
+} from "@/lib/intelligence/events";
 import { createCommunity } from "./actions";
 
 type CommunityItem = {
@@ -16,19 +21,27 @@ export default async function CommunitiesPage({
   const { error: queryError, success } = await searchParams;
   const { supabase } = await requireUser();
 
-  const { data, error } = await supabase
-    .from("communities")
-    .select("id, name, description, is_active")
-    .order("name");
+  const [{ data, error }, healthResult] = await Promise.all([
+    supabase
+      .from("communities")
+      .select("id, name, description, is_active")
+      .order("name"),
+    supabase.from("community_health").select("*"),
+  ]);
 
   const communities: CommunityItem[] = (data ?? []) as CommunityItem[];
+  const health = new Map(
+    ((healthResult.data ?? []) as (CommunityHealthRow & {
+      community_id: string;
+    })[]).map((row) => [row.community_id, row]),
+  );
 
   return (
     <main className="mx-auto max-w-7xl px-5 py-10">
-      <h1 className="text-3xl font-semibold">Communities</h1>
-      <p className="mt-2 text-neutral-600">
-        Clubs, circles and recurring groups around the café.
-      </p>
+      <PageHeader
+        title="Communities"
+        description="Clubs, circles and recurring groups around the café."
+      />
 
       {success && <p className="mt-4 rounded-xl border border-green-300 bg-green-50 p-3 text-green-800">{success}</p>}
 
@@ -68,6 +81,31 @@ export default async function CommunitiesPage({
               <p className="mt-2 text-sm text-neutral-600">
                 {community.description || "No description"}
               </p>
+              {(() => {
+                const row = health.get(community.id);
+                if (!row) return null;
+                const status = communityStatus(row);
+
+                return (
+                  <div className="mt-3 text-sm">
+                    <p className="text-neutral-600">
+                      {row.active_members} member
+                      {row.active_members === 1 ? "" : "s"} ·{" "}
+                      {row.events_last_quarter} event
+                      {row.events_last_quarter === 1 ? "" : "s"} this quarter
+                    </p>
+                    <p
+                      className={
+                        status.needsAttention
+                          ? "mt-1 font-medium text-amber-700"
+                          : "mt-1 text-neutral-500"
+                      }
+                    >
+                      {status.label}
+                    </p>
+                  </div>
+                );
+              })()}
             </article>
           ))
         )}

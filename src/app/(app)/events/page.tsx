@@ -1,4 +1,8 @@
+import Link from "next/link";
+
 import { requireUser } from "@/lib/auth";
+import { PageHeader } from "@/components/platform/page-header";
+import { capacityLabel, capacityState } from "@/lib/intelligence/events";
 import { createEvent } from "./actions";
 
 type EventItem = {
@@ -9,6 +13,12 @@ type EventItem = {
   capacity: number | null;
 };
 
+type SummaryRow = {
+  event_id: string;
+  expected_headcount: number;
+  attended_count: number;
+};
+
 export default async function EventsPage({
   searchParams,
 }: {
@@ -17,19 +27,30 @@ export default async function EventsPage({
   const { error: queryError, success } = await searchParams;
   const { supabase } = await requireUser();
 
-  const { data, error } = await supabase
-    .from("events")
-    .select("id, name, starts_at, location, capacity")
-    .order("starts_at", { ascending: false });
+  const [{ data, error }, summaryResult] = await Promise.all([
+    supabase
+      .from("events")
+      .select("id, name, starts_at, location, capacity")
+      .order("starts_at", { ascending: false }),
+    supabase
+      .from("event_attendance_summary")
+      .select("event_id, expected_headcount, attended_count"),
+  ]);
 
   const events: EventItem[] = (data ?? []) as EventItem[];
+  const summaries = new Map(
+    ((summaryResult.data ?? []) as SummaryRow[]).map((row) => [
+      row.event_id,
+      row,
+    ]),
+  );
 
   return (
     <main className="mx-auto max-w-7xl px-5 py-10">
-      <h1 className="text-3xl font-semibold">Events</h1>
-      <p className="mt-2 text-neutral-600">
-        Registrations, attendance and event history.
-      </p>
+      <PageHeader
+        title="Events"
+        description="Registrations, attendance and event history."
+      />
 
       {success && <p className="mt-4 rounded-xl border border-green-300 bg-green-50 p-3 text-green-800">{success}</p>}
 
@@ -78,16 +99,26 @@ export default async function EventsPage({
         ) : (
           events.map((event) => (
             <article key={event.id} className="rounded-2xl border p-5">
-              <h2 className="font-semibold">{event.name}</h2>
+              <Link
+                href={`/events/${event.id}`}
+                className="font-semibold underline"
+              >
+                {event.name}
+              </Link>
               <p className="mt-2 text-sm text-neutral-600">
                 {new Date(event.starts_at).toLocaleString()} ·{" "}
                 {event.location || "Location pending"}
               </p>
-              {event.capacity !== null && (
-                <p className="mt-1 text-xs text-neutral-500">
-                  Capacity: {event.capacity}
-                </p>
-              )}
+              <p className="mt-1 text-xs text-neutral-500">
+                {summaries.get(event.id)?.expected_headcount ?? 0} expected
+                {event.capacity !== null &&
+                  ` · ${capacityLabel(
+                    capacityState(
+                      summaries.get(event.id)?.expected_headcount ?? 0,
+                      event.capacity,
+                    ),
+                  )}`}
+              </p>
             </article>
           ))
         )}
