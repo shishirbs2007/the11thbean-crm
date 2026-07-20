@@ -144,7 +144,7 @@ export default async function CampaignsPage() {
 
       <div className="mt-8 space-y-6">
         {campaigns.length === 0 ? (
-          <Section title="Campaigns" description="Nothing yet.">
+          <Section title="No campaigns yet" description="Nothing has been drafted.">
             <p className="text-neutral-600">
               No campaigns. Create a draft above.
             </p>
