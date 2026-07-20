@@ -45,7 +45,6 @@ production actually serves it, so the order is:
 Adding it earlier turns the suite red for a reason that has nothing to do with
 production health, which trains people to ignore it.
 
-**Awaiting promotion:** `/system` (operational monitoring).
 
 ## Test suites
 
