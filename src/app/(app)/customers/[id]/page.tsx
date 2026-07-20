@@ -3,6 +3,11 @@ import { requireUser } from "@/lib/auth";
 import { ErrorPanel } from "@/components/notifications/error-panel";
 import { Section } from "@/components/customer360/section";
 import {
+  parseHospitalityScore,
+  topSignals,
+} from "@/lib/intelligence/briefing";
+import { parseNextBestAction } from "@/lib/intelligence/recommendations";
+import {
   buildHospitalitySuggestions,
   parseTasteProfile,
   upcomingImportantDates,
@@ -172,6 +177,8 @@ export default async function CustomerPage({
       .order("first_name")
       .limit(500),
     supabase.rpc("customer_taste_profile", { target_person_id: id }),
+    supabase.rpc("hospitality_score", { target_person_id: id }),
+    supabase.rpc("next_best_action", { target_person_id: id }),
   ]);
 
   const [
@@ -192,6 +199,8 @@ export default async function CustomerPage({
     healthResult,
     optionsResult,
     tasteResult,
+    scoreResult,
+    nextActionResult,
   ] = results;
 
   const person = personResult.data;
@@ -236,6 +245,8 @@ export default async function CustomerPage({
   const relationshipScore = numberValue(health?.relationship_score);
   const lastVisitDays = daysSince(health?.last_visit_at);
   const taste = parseTasteProfile(tasteResult.data);
+  const hospitality_score = parseHospitalityScore(scoreResult.data);
+  const nextAction = parseNextBestAction(nextActionResult.data);
 
   const signals: HospitalitySignals = {
     taste,
@@ -278,6 +289,42 @@ export default async function CustomerPage({
       </div>
 
       <ErrorPanel messages={[errors.map((error) => error?.message).join(" | ")]} />
+
+      <Section
+        title="Next best action"
+        description="The single most useful thing to do for this guest right now, and why the CRM thinks so."
+      >
+        <div className="rounded-xl bg-neutral-50 p-5">
+          <p className="text-sm uppercase tracking-wide text-neutral-500">
+            {nextAction.label}
+          </p>
+          <p className="mt-2 text-lg font-semibold">
+            {nextAction.suggested_action}
+          </p>
+          <p className="mt-2 text-sm text-neutral-600">{nextAction.why}</p>
+          <p className="mt-2 text-xs text-neutral-500">
+            Confidence {Math.round(nextAction.confidence * 100)}%
+          </p>
+        </div>
+
+        {hospitality_score.signals.length > 0 && (
+          <div className="mt-5">
+            <p className="text-sm text-neutral-500">
+              Hospitality score {Math.round(hospitality_score.score)}/100, driven by:
+            </p>
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {topSignals(hospitality_score).map((signal) => (
+                <li
+                  key={signal.key}
+                  className="rounded-full border px-3 py-1 text-sm"
+                >
+                  {signal.label} {Math.round(signal.strength)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </Section>
 
       <Section
         title="Customer health"
