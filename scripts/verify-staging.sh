@@ -62,9 +62,12 @@ api() {
 
 step "Reachability"
 
-if curl -fsS -o /dev/null "${STAGING_URL}/rest/v1/" \
-     -H "apikey: ${STAGING_ANON_KEY}" 2>/dev/null; then
-  ok "Staging API responds"
+# Query a real table the way the application does. The /rest/v1/ root needs
+# more than an apikey and returns 401, which is not a reachability failure.
+if curl -fsS -o /dev/null "${STAGING_URL}/rest/v1/branches?select=id&limit=1" \
+     -H "apikey: ${STAGING_ANON_KEY}" \
+     -H "Authorization: Bearer ${STAGING_ANON_KEY}" 2>/dev/null; then
+  ok "Staging API responds to an anonymous read"
 else
   bad "Staging API did not respond"
 fi

@@ -58,6 +58,10 @@ PROJECT_NAME="$(supabase projects list -o json 2>/dev/null \
 
 log "Target project: $PROJECT_NAME ($STAGING_PROJECT_REF)"
 
+# The denylist check above has passed, so the rest of this script may act on a
+# hosted project. Declared once, deliberately, rather than per command.
+export CRM_ENVIRONMENT=staging
+
 STAGING_URL="https://${STAGING_PROJECT_REF}.supabase.co"
 
 step "Linking the Supabase CLI to staging"
@@ -116,18 +120,28 @@ else
 fi
 
 step "Seeding synthetic data"
-DB_URL="postgresql://postgres.${STAGING_PROJECT_REF}:${STAGING_DB_PASSWORD:-}@aws-0-ap-south-1.pooler.supabase.com:5432/postgres"
 
-if [ -n "${STAGING_DB_PASSWORD:-}" ]; then
-  psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$REPO_ROOT/supabase/seed-staging.sql" 2>&1 \
-    | grep -E "NOTICE|ERROR" || true
-else
-  warn "STAGING_DB_PASSWORD not set; seeding through the REST API instead."
-  curl -fsS -X POST "${STAGING_URL}/rest/v1/rpc/exec_seed" \
-    -H "apikey: ${SERVICE_KEY}" -H "Authorization: Bearer ${SERVICE_KEY}" \
-    >/dev/null 2>&1 \
-    || warn "Could not seed automatically. Run: psql <staging-url> -f supabase/seed-staging.sql"
-fi
+# Seeding goes through the Management API rather than a direct database
+# connection. It needs only the access token we already have, works from any
+# network (the direct host is IPv6-only), and removes the database password
+# from the required credential set entirely.
+require_non_production "$STAGING_PROJECT_REF" "seeding"
+
+SEED_PAYLOAD="$(python3 -c "import json,pathlib;print(json.dumps({'query':pathlib.Path('supabase/seed-staging.sql').read_text()}))")"
+
+SEED_STATUS="$(curl -sS -o /tmp/crm-seed-response.json -w '%{http_code}' -m 180 \
+  -X POST "https://api.supabase.com/v1/projects/${STAGING_PROJECT_REF}/database/query" \
+  -H "Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -H "User-Agent: the11thbean-crm-bootstrap/1.0" \
+  -d "$SEED_PAYLOAD")"
+
+case "$SEED_STATUS" in
+  2*) log "Synthetic seed applied." ;;
+  *)  fail "Seeding failed (HTTP ${SEED_STATUS}): $(head -c 300 /tmp/crm-seed-response.json)" ;;
+esac
+
+rm -f /tmp/crm-seed-response.json
 
 step "Generating database types"
 supabase gen types typescript --project-id "$STAGING_PROJECT_REF" \
