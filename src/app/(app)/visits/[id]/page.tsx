@@ -20,7 +20,7 @@ type Person = {
 
 function one<T>(value: T | T[] | null): T | null {
   if (!value) return null;
-  return Array.isArray(value) ? value[0] ?? null : value;
+  return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
 function displayName(person: Person): string {
@@ -33,9 +33,7 @@ function inputDateTime(value: string): string {
   const date = new Date(value);
   const offset = date.getTimezoneOffset();
 
-  return new Date(date.getTime() - offset * 60_000)
-    .toISOString()
-    .slice(0, 16);
+  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
 }
 
 export default async function VisitPage({
@@ -70,9 +68,7 @@ export default async function VisitPage({
       .order("created_at"),
     supabase
       .from("people")
-      .select(
-        "id, first_name, last_name, preferred_name, phone",
-      )
+      .select("id, first_name, last_name, preferred_name, phone")
       .eq("is_active", true)
       .order("first_name")
       .limit(1500),
@@ -116,8 +112,7 @@ export default async function VisitPage({
 
           <p className="mt-2 text-neutral-600">
             {new Date(visit.visited_at).toLocaleString()}
-            {" · "}
-            ₹{Number(visit.net_amount ?? 0).toFixed(0)}
+            {" · "}₹{Number(visit.net_amount ?? 0).toFixed(0)}
             {" · "}
             {visit.party_size || 1} guests
           </p>
@@ -142,6 +137,7 @@ export default async function VisitPage({
         <Section title="Visit details">
           <form action={updateAction} className="grid gap-3 sm:grid-cols-2">
             <select
+              aria-label="Choose a customer"
               name="person_id"
               defaultValue={visit.person_id || ""}
               className="rounded-xl border px-3 py-2 sm:col-span-2"
@@ -163,6 +159,7 @@ export default async function VisitPage({
             />
 
             <select
+              aria-label="Type of visit"
               name="visit_type"
               defaultValue={visit.visit_type || "walk_in"}
               className="rounded-xl border px-3 py-2"
@@ -183,6 +180,7 @@ export default async function VisitPage({
             />
 
             <select
+              aria-label="Where this came from"
               name="source"
               defaultValue={visit.source || "manual"}
               className="rounded-xl border px-3 py-2"
@@ -234,6 +232,7 @@ export default async function VisitPage({
             />
 
             <select
+              aria-label="Payment method"
               name="payment_method"
               defaultValue={visit.payment_method || ""}
               className="rounded-xl border px-3 py-2"
@@ -276,6 +275,7 @@ export default async function VisitPage({
             />
 
             <select
+              aria-label="Satisfaction score"
               name="satisfaction_score"
               defaultValue={visit.satisfaction_score || ""}
               className="rounded-xl border px-3 py-2"
@@ -360,11 +360,7 @@ export default async function VisitPage({
               </p>
             ) : (
               items.map((item) => {
-                const removeAction = deleteVisitItem.bind(
-                  null,
-                  id,
-                  item.id,
-                );
+                const removeAction = deleteVisitItem.bind(null, id, item.id);
 
                 return (
                   <article
@@ -393,9 +389,7 @@ export default async function VisitPage({
                       </p>
 
                       <form action={removeAction} className="mt-2">
-                        <button className="text-sm text-red-700">
-                          Remove
-                        </button>
+                        <button className="text-sm text-red-700">Remove</button>
                       </form>
                     </div>
                   </article>

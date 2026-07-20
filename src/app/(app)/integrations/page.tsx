@@ -44,7 +44,10 @@ export default async function IntegrationsPage() {
               </p>
             ) : (
               runs.map((run) => (
-                <div key={run.id} className="rounded-xl bg-neutral-50 p-4 text-sm">
+                <div
+                  key={run.id}
+                  className="rounded-xl bg-neutral-50 p-4 text-sm"
+                >
                   <p className="font-medium">
                     {run.provider} · {run.sync_type}
                   </p>
@@ -66,7 +69,10 @@ export default async function IntegrationsPage() {
               </p>
             ) : (
               errors.map((item) => (
-                <div key={item.id} className="rounded-xl bg-neutral-50 p-4 text-sm">
+                <div
+                  key={item.id}
+                  className="rounded-xl bg-neutral-50 p-4 text-sm"
+                >
                   <p className="font-medium">{item.error_code || "Error"}</p>
                   <p className="mt-1 text-neutral-600">{item.error_message}</p>
                 </div>

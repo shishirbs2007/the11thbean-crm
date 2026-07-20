@@ -11,7 +11,9 @@ export default async function LoginPage({
   return (
     <main className="mx-auto flex min-h-screen max-w-md items-center px-6">
       <section className="w-full rounded-3xl border p-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em]">The 11th Bean</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em]">
+          The 11th Bean
+        </p>
         <h1 className="mt-3 text-3xl font-semibold">Staff sign in</h1>
         <p className="mt-3 text-sm leading-6 text-neutral-600">
           Enter your authorised work email. We will send a secure sign-in link.

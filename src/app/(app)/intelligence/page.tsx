@@ -58,18 +58,21 @@ export default async function IntelligencePage({
   const { period } = await searchParams;
   const { supabase } = await requireUser();
 
-  const periodDays = [7, 30, 90].includes(Number(period))
-    ? Number(period)
-    : 30;
+  const periodDays = [7, 30, 90].includes(Number(period)) ? Number(period) : 30;
 
-  const [kpiResult, forecastResult, driftingResult, storiesResult, rhythmResult] =
-    await Promise.all([
-      supabase.rpc("executive_kpis", { period_days: periodDays }),
-      supabase.rpc("forecast_demand", { days_ahead: 7 }),
-      supabase.rpc("drifting_regulars", { max_results: 10 }),
-      supabase.rpc("conversion_stories", { max_results: 10 }),
-      supabase.from("operational_rhythm").select("*"),
-    ]);
+  const [
+    kpiResult,
+    forecastResult,
+    driftingResult,
+    storiesResult,
+    rhythmResult,
+  ] = await Promise.all([
+    supabase.rpc("executive_kpis", { period_days: periodDays }),
+    supabase.rpc("forecast_demand", { days_ahead: 7 }),
+    supabase.rpc("drifting_regulars", { max_results: 10 }),
+    supabase.rpc("conversion_stories", { max_results: 10 }),
+    supabase.from("operational_rhythm").select("*"),
+  ]);
 
   const kpis = (kpiResult.data ?? []) as Kpi[];
   const forecasts = (forecastResult.data ?? []) as Forecast[];
@@ -301,8 +304,8 @@ export default async function IntelligencePage({
                   <p className="mt-1 text-sm text-neutral-600">
                     {story.total_visits} visits over {story.days_to_regular}{" "}
                     days · {story.hospitality_actions} hospitality actions ·{" "}
-                    {story.events_attended} events ·{" "}
-                    {story.communities_joined} communities
+                    {story.events_attended} events · {story.communities_joined}{" "}
+                    communities
                   </p>
                 </li>
               ))}

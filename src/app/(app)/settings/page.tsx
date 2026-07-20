@@ -19,7 +19,9 @@ export default async function SettingsPage({
       <section className="mt-7 rounded-2xl border p-6">
         <h2 className="font-semibold">Your access</h2>
         <p className="mt-2 text-sm text-neutral-600">Email: {user.email}</p>
-        <p className="mt-1 text-sm text-neutral-600">Role: {role || "Not assigned"}</p>
+        <p className="mt-1 text-sm text-neutral-600">
+          Role: {role || "Not assigned"}
+        </p>
 
         {!role && (
           <form action={claimFirstAdmin} className="mt-5">

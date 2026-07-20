@@ -196,7 +196,11 @@ export default async function BriefingPage() {
               placeholder="What needs doing"
               className="rounded-xl border px-3 py-2"
             />
-            <select name="person_id" className="rounded-xl border px-3 py-2">
+            <select
+              aria-label="Choose a customer"
+              name="person_id"
+              className="rounded-xl border px-3 py-2"
+            >
               <option value="">Not about a specific guest</option>
               {people.map((person) => (
                 <option key={person.id} value={person.id}>
@@ -210,6 +214,7 @@ export default async function BriefingPage() {
               className="rounded-xl border px-3 py-2"
             />
             <select
+              aria-label="Priority"
               name="priority"
               defaultValue="3"
               className="rounded-xl border px-3 py-2"
@@ -230,6 +235,7 @@ export default async function BriefingPage() {
         >
           <form action={saveHandover} className="grid gap-3">
             <select
+              aria-label="Which shift"
               name="shift_label"
               defaultValue="day"
               className="rounded-xl border px-3 py-2"
@@ -294,10 +300,7 @@ function TaskRow({ task }: { task: HospitalityTask }) {
           {person && task.person_id && (
             <>
               {" · "}
-              <Link
-                href={`/customers/${task.person_id}`}
-                className="underline"
-              >
+              <Link href={`/customers/${task.person_id}`} className="underline">
                 {displayName(person)}
               </Link>
             </>

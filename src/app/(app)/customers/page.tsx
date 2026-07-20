@@ -26,11 +26,7 @@ export default async function CustomersPage({
   }>;
 }) {
   const { supabase } = await requireUser();
-  const {
-    q = "",
-    page = "1",
-    sort = "newest",
-  } = await searchParams;
+  const { q = "", page = "1", sort = "newest" } = await searchParams;
 
   const currentPage = Math.max(1, Number(page) || 1);
   const from = (currentPage - 1) * PAGE_SIZE;
@@ -63,10 +59,7 @@ export default async function CustomersPage({
   const { data, error, count } = await query;
   const people = (data ?? []) as CustomerListItem[];
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil((count ?? 0) / PAGE_SIZE),
-  );
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 
   const buildHref = (targetPage: number) => {
     const params = new URLSearchParams();
@@ -106,6 +99,7 @@ export default async function CustomersPage({
         />
 
         <select
+          aria-label="Sort customers by"
           name="sort"
           defaultValue={sort}
           className="rounded-xl border px-4 py-3"
@@ -162,8 +156,7 @@ export default async function CustomersPage({
                   {person.last_name || ""}
                 </p>
                 <p className="mt-1 text-xs text-neutral-500">
-                  Added{" "}
-                  {new Date(person.created_at).toLocaleDateString()}
+                  Added {new Date(person.created_at).toLocaleDateString()}
                 </p>
               </div>
 

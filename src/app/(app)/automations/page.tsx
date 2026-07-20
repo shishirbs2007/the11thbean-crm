@@ -76,10 +76,7 @@ export default async function AutomationsPage() {
       />
 
       <ErrorPanel
-        messages={[
-          automationsResult.error?.message,
-          runsResult.error?.message,
-        ]}
+        messages={[automationsResult.error?.message, runsResult.error?.message]}
       />
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -126,8 +123,8 @@ export default async function AutomationsPage() {
                         {automation.explanation}
                       </p>
                       <p className="mt-1 text-xs uppercase tracking-wide text-neutral-500">
-                        {automation.trigger_type} · {automation.channel} ·{" "}
-                        every {automation.run_interval_hours}h ·{" "}
+                        {automation.trigger_type} · {automation.channel} · every{" "}
+                        {automation.run_interval_hours}h ·{" "}
                         {automation.is_active ? "on" : "off"}
                         {automation.last_run_at &&
                           ` · last run ${new Date(

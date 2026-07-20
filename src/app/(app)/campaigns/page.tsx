@@ -115,6 +115,7 @@ export default async function CampaignsPage() {
               className="rounded-xl border px-3 py-2"
             />
             <select
+              aria-label="Channel"
               name="channel"
               defaultValue="email"
               className="rounded-xl border px-3 py-2"
@@ -125,6 +126,7 @@ export default async function CampaignsPage() {
               <option value="push">Push</option>
             </select>
             <select
+              aria-label="Choose an audience"
               name="audience_id"
               className="rounded-xl border px-3 py-2"
             >
@@ -144,7 +146,10 @@ export default async function CampaignsPage() {
 
       <div className="mt-8 space-y-6">
         {campaigns.length === 0 ? (
-          <Section title="No campaigns yet" description="Nothing has been drafted.">
+          <Section
+            title="No campaigns yet"
+            description="Nothing has been drafted."
+          >
             <p className="text-neutral-600">
               No campaigns. Create a draft above.
             </p>
@@ -165,9 +170,7 @@ export default async function CampaignsPage() {
               >
                 {missing.length > 0 ? (
                   <div className="rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
-                    <p className="font-medium">
-                      Before this can be reviewed:
-                    </p>
+                    <p className="font-medium">Before this can be reviewed:</p>
                     <ul className="mt-2 list-disc pl-5">
                       {missing.map((item) => (
                         <li key={item}>{item}</li>
@@ -199,6 +202,7 @@ export default async function CampaignsPage() {
 
                 <form action={save} className="mt-5 grid gap-3">
                   <select
+                    aria-label="Choose an audience"
                     name="audience_id"
                     defaultValue={campaign.audience_id || ""}
                     className="rounded-xl border px-3 py-2"

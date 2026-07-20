@@ -36,11 +36,14 @@ type CommunityEvent = {
 
 function one<T>(value: T | T[] | null): T | null {
   if (!value) return null;
-  return Array.isArray(value) ? value[0] ?? null : value;
+  return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
 function displayName(
-  person: Pick<PersonName, "first_name" | "last_name" | "preferred_name"> | null,
+  person: Pick<
+    PersonName,
+    "first_name" | "last_name" | "preferred_name"
+  > | null,
 ): string {
   if (!person) return "Unknown";
   return `${person.preferred_name || person.first_name} ${
@@ -103,8 +106,7 @@ export default async function CommunityDetailPage({
   if (!community) notFound();
 
   const health = healthResult.data as
-    | (CommunityHealthRow & { community_id: string })
-    | null;
+    (CommunityHealthRow & { community_id: string }) | null;
   const memberships = (membershipsResult.data ?? []) as Membership[];
   const upcoming = (upcomingResult.data ?? []) as CommunityEvent[];
   const past = (pastResult.data ?? []) as CommunityEvent[];
@@ -139,10 +141,7 @@ export default async function CommunityDetailPage({
       <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
           ["Active members", `${health?.active_members ?? active.length}`],
-          [
-            "Joined this quarter",
-            `${health?.joined_last_quarter ?? 0}`,
-          ],
+          ["Joined this quarter", `${health?.joined_last_quarter ?? 0}`],
           ["Events this quarter", `${health?.events_last_quarter ?? 0}`],
           ["Status", status?.label ?? "Not enough data"],
         ].map(([label, text]) => (
@@ -166,8 +165,12 @@ export default async function CommunityDetailPage({
           title="Members"
           description="The single place community membership is managed."
         >
-          <form action={join} className="grid gap-3 sm:grid-cols-[2fr_1fr_auto]">
+          <form
+            action={join}
+            className="grid gap-3 sm:grid-cols-[2fr_1fr_auto]"
+          >
             <select
+              aria-label="Choose a customer"
               name="person_id"
               required
               className="rounded-xl border px-3 py-2"

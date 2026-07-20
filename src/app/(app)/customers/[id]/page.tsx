@@ -2,10 +2,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { ErrorPanel } from "@/components/notifications/error-panel";
 import { Section } from "@/components/customer360/section";
-import {
-  parseHospitalityScore,
-  topSignals,
-} from "@/lib/intelligence/briefing";
+import { parseHospitalityScore, topSignals } from "@/lib/intelligence/briefing";
 import { parseNextBestAction } from "@/lib/intelligence/recommendations";
 import {
   buildHospitalitySuggestions,
@@ -35,7 +32,7 @@ type PersonName = {
 
 function one<T>(value: T | T[] | null): T | null {
   if (!value) return null;
-  return Array.isArray(value) ? value[0] ?? null : value;
+  return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
 function displayName(person: PersonName | null): string {
@@ -81,9 +78,7 @@ function daysSince(value: string | null | undefined): number | null {
 
   return Math.max(
     0,
-    Math.floor(
-      (Date.now() - new Date(value).getTime()) / 86_400_000,
-    ),
+    Math.floor((Date.now() - new Date(value).getTime()) / 86_400_000),
   );
 }
 
@@ -126,11 +121,7 @@ export default async function CustomerPage({
       .select("*")
       .eq("person_id", id)
       .maybeSingle(),
-    supabase
-      .from("pets")
-      .select("*")
-      .eq("person_id", id)
-      .eq("is_active", true),
+    supabase.from("pets").select("*").eq("person_id", id).eq("is_active", true),
     supabase
       .from("important_dates")
       .select("*")
@@ -253,9 +244,8 @@ export default async function CustomerPage({
     statedDrink: jsonString(coffee, "drink"),
     allergies: hospitality?.allergies ?? [],
     seatingPreference:
-      preferences.find(
-        (preference) => preference.preference_type === "seating",
-      )?.preference_value ?? "",
+      preferences.find((preference) => preference.preference_type === "seating")
+        ?.preference_value ?? "",
     daysSinceLastVisit: lastVisitDays,
     referralCount: referrals.length,
     communityNames: memberships.flatMap(
@@ -288,7 +278,9 @@ export default async function CustomerPage({
         </div>
       </div>
 
-      <ErrorPanel messages={[errors.map((error) => error?.message).join(" | ")]} />
+      <ErrorPanel
+        messages={[errors.map((error) => error?.message).join(" | ")]}
+      />
 
       <Section
         title="Next best action"
@@ -310,7 +302,8 @@ export default async function CustomerPage({
         {hospitality_score.signals.length > 0 && (
           <div className="mt-5">
             <p className="text-sm text-neutral-500">
-              Hospitality score {Math.round(hospitality_score.score)}/100, driven by:
+              Hospitality score {Math.round(hospitality_score.score)}/100,
+              driven by:
             </p>
             <ul className="mt-2 flex flex-wrap gap-2">
               {topSignals(hospitality_score).map((signal) => (
@@ -332,20 +325,35 @@ export default async function CustomerPage({
       >
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[
-            ["Health score", `${numberValue(health?.health_score).toFixed(0)}/100`],
+            [
+              "Health score",
+              `${numberValue(health?.health_score).toFixed(0)}/100`,
+            ],
             ["Relationship score", `${relationshipScore.toFixed(0)}/100`],
             ["Churn risk", `${numberValue(health?.churn_risk).toFixed(0)}%`],
-            ["Lifetime value", `₹${numberValue(health?.lifetime_value || spend).toFixed(0)}`],
-            ["Average ticket", `₹${numberValue(health?.average_ticket).toFixed(0)}`],
+            [
+              "Lifetime value",
+              `₹${numberValue(health?.lifetime_value || spend).toFixed(0)}`,
+            ],
+            [
+              "Average ticket",
+              `₹${numberValue(health?.average_ticket).toFixed(0)}`,
+            ],
             ["Favourite day", weekdayName(health?.preferred_visit_day)],
-            ["Favourite time", health?.preferred_visit_time || "Not enough data"],
+            [
+              "Favourite time",
+              health?.preferred_visit_time || "Not enough data",
+            ],
             [
               "Last visit",
               lastVisitDays === null
                 ? "No visit recorded"
                 : `${lastVisitDays} day${lastVisitDays === 1 ? "" : "s"} ago`,
             ],
-            ["Community engagement", `${numberValue(health?.community_score).toFixed(0)}/100`],
+            [
+              "Community engagement",
+              `${numberValue(health?.community_score).toFixed(0)}/100`,
+            ],
             [
               "Referral impact",
               `${numberValue(health?.referral_count).toFixed(0)} introduced · ₹${numberValue(
@@ -383,13 +391,49 @@ export default async function CustomerPage({
 
         <Section title="Identity and contact">
           <form action={update} className="grid gap-3 sm:grid-cols-2">
-            <input name="first_name" required defaultValue={person.first_name} className="rounded-xl border px-3 py-2" />
-            <input name="last_name" defaultValue={person.last_name || ""} placeholder="Last name" className="rounded-xl border px-3 py-2" />
-            <input name="preferred_name" defaultValue={person.preferred_name || ""} placeholder="Preferred name" className="rounded-xl border px-3 py-2" />
-            <input name="phone" defaultValue={person.phone || ""} placeholder="Phone" className="rounded-xl border px-3 py-2" />
-            <input name="email" type="email" defaultValue={person.email || ""} placeholder="Email" className="rounded-xl border px-3 py-2" />
-            <input name="occupation" defaultValue={person.occupation || ""} placeholder="Occupation" className="rounded-xl border px-3 py-2" />
-            <input name="company" defaultValue={person.company || ""} placeholder="Company" className="rounded-xl border px-3 py-2" />
+            <input
+              name="first_name"
+              required
+              defaultValue={person.first_name}
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="last_name"
+              defaultValue={person.last_name || ""}
+              placeholder="Last name"
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="preferred_name"
+              defaultValue={person.preferred_name || ""}
+              placeholder="Preferred name"
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="phone"
+              defaultValue={person.phone || ""}
+              placeholder="Phone"
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="email"
+              type="email"
+              defaultValue={person.email || ""}
+              placeholder="Email"
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="occupation"
+              defaultValue={person.occupation || ""}
+              placeholder="Occupation"
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="company"
+              defaultValue={person.company || ""}
+              placeholder="Company"
+              className="rounded-xl border px-3 py-2"
+            />
             <button className="rounded-xl bg-black px-4 py-2 text-white sm:col-span-2">
               Save identity
             </button>
@@ -408,25 +452,117 @@ export default async function CustomerPage({
               className="min-h-28 w-full rounded-xl border p-3"
             />
             <div className="grid gap-3 sm:grid-cols-2">
-              <input name="preferred_table" defaultValue={hospitality?.preferred_table || ""} placeholder="Preferred table" className="rounded-xl border px-3 py-2" />
-              <input name="preferred_zone" defaultValue={hospitality?.preferred_zone || ""} placeholder="Preferred zone" className="rounded-xl border px-3 py-2" />
-              <input name="preferred_visit_time" defaultValue={hospitality?.preferred_visit_time || ""} placeholder="Usual visit time" className="rounded-xl border px-3 py-2" />
-              <input name="typical_visit_context" defaultValue={hospitality?.typical_visit_context || ""} placeholder="Typical visit context" className="rounded-xl border px-3 py-2" />
-              <input name="coffee_drink" defaultValue={jsonString(coffee, "drink")} placeholder="Favourite coffee" className="rounded-xl border px-3 py-2" />
-              <input name="coffee_milk" defaultValue={jsonString(coffee, "milk")} placeholder="Milk preference" className="rounded-xl border px-3 py-2" />
-              <input name="coffee_strength" defaultValue={jsonString(coffee, "strength")} placeholder="Strength" className="rounded-xl border px-3 py-2" />
-              <input name="coffee_sweetness" defaultValue={jsonString(coffee, "sweetness")} placeholder="Sweetness" className="rounded-xl border px-3 py-2" />
-              <input name="food_favourites" defaultValue={jsonList(food, "favourites")} placeholder="Food favourites, comma-separated" className="rounded-xl border px-3 py-2" />
-              <input name="food_dislikes" defaultValue={jsonList(food, "dislikes")} placeholder="Food dislikes, comma-separated" className="rounded-xl border px-3 py-2" />
-              <input name="dietary_restrictions" defaultValue={(hospitality?.dietary_restrictions || []).join(", ")} placeholder="Dietary restrictions" className="rounded-xl border px-3 py-2" />
-              <input name="allergies" defaultValue={(hospitality?.allergies || []).join(", ")} placeholder="Allergies" className="rounded-xl border px-3 py-2" />
-              <input name="languages" defaultValue={(hospitality?.languages || []).join(", ")} placeholder="Languages" className="rounded-xl border px-3 py-2" />
-              <input name="work_style" defaultValue={hospitality?.work_style || ""} placeholder="Work or visit style" className="rounded-xl border px-3 py-2" />
+              <input
+                name="preferred_table"
+                defaultValue={hospitality?.preferred_table || ""}
+                placeholder="Preferred table"
+                className="rounded-xl border px-3 py-2"
+              />
+              <input
+                name="preferred_zone"
+                defaultValue={hospitality?.preferred_zone || ""}
+                placeholder="Preferred zone"
+                className="rounded-xl border px-3 py-2"
+              />
+              <input
+                name="preferred_visit_time"
+                defaultValue={hospitality?.preferred_visit_time || ""}
+                placeholder="Usual visit time"
+                className="rounded-xl border px-3 py-2"
+              />
+              <input
+                name="typical_visit_context"
+                defaultValue={hospitality?.typical_visit_context || ""}
+                placeholder="Typical visit context"
+                className="rounded-xl border px-3 py-2"
+              />
+              <input
+                name="coffee_drink"
+                defaultValue={jsonString(coffee, "drink")}
+                placeholder="Favourite coffee"
+                className="rounded-xl border px-3 py-2"
+              />
+              <input
+                name="coffee_milk"
+                defaultValue={jsonString(coffee, "milk")}
+                placeholder="Milk preference"
+                className="rounded-xl border px-3 py-2"
+              />
+              <input
+                name="coffee_strength"
+                defaultValue={jsonString(coffee, "strength")}
+                placeholder="Strength"
+                className="rounded-xl border px-3 py-2"
+              />
+              <input
+                name="coffee_sweetness"
+                defaultValue={jsonString(coffee, "sweetness")}
+                placeholder="Sweetness"
+                className="rounded-xl border px-3 py-2"
+              />
+              <input
+                name="food_favourites"
+                defaultValue={jsonList(food, "favourites")}
+                placeholder="Food favourites, comma-separated"
+                className="rounded-xl border px-3 py-2"
+              />
+              <input
+                name="food_dislikes"
+                defaultValue={jsonList(food, "dislikes")}
+                placeholder="Food dislikes, comma-separated"
+                className="rounded-xl border px-3 py-2"
+              />
+              <input
+                name="dietary_restrictions"
+                defaultValue={(hospitality?.dietary_restrictions || []).join(
+                  ", ",
+                )}
+                placeholder="Dietary restrictions"
+                className="rounded-xl border px-3 py-2"
+              />
+              <input
+                name="allergies"
+                defaultValue={(hospitality?.allergies || []).join(", ")}
+                placeholder="Allergies"
+                className="rounded-xl border px-3 py-2"
+              />
+              <input
+                name="languages"
+                defaultValue={(hospitality?.languages || []).join(", ")}
+                placeholder="Languages"
+                className="rounded-xl border px-3 py-2"
+              />
+              <input
+                name="work_style"
+                defaultValue={hospitality?.work_style || ""}
+                placeholder="Work or visit style"
+                className="rounded-xl border px-3 py-2"
+              />
             </div>
-            <textarea name="children_notes" defaultValue={hospitality?.children_notes || ""} placeholder="Children and family context" className="min-h-20 w-full rounded-xl border p-3" />
-            <textarea name="accessibility_needs" defaultValue={hospitality?.accessibility_needs || ""} placeholder="Accessibility needs" className="min-h-20 w-full rounded-xl border p-3" />
-            <textarea name="conversation_preferences" defaultValue={hospitality?.conversation_preferences || ""} placeholder="Conversation preferences" className="min-h-20 w-full rounded-xl border p-3" />
-            <textarea name="do_not_mention" defaultValue={hospitality?.do_not_mention || ""} placeholder="Sensitive topics staff should avoid" className="min-h-20 w-full rounded-xl border p-3" />
+            <textarea
+              name="children_notes"
+              defaultValue={hospitality?.children_notes || ""}
+              placeholder="Children and family context"
+              className="min-h-20 w-full rounded-xl border p-3"
+            />
+            <textarea
+              name="accessibility_needs"
+              defaultValue={hospitality?.accessibility_needs || ""}
+              placeholder="Accessibility needs"
+              className="min-h-20 w-full rounded-xl border p-3"
+            />
+            <textarea
+              name="conversation_preferences"
+              defaultValue={hospitality?.conversation_preferences || ""}
+              placeholder="Conversation preferences"
+              className="min-h-20 w-full rounded-xl border p-3"
+            />
+            <textarea
+              name="do_not_mention"
+              defaultValue={hospitality?.do_not_mention || ""}
+              placeholder="Sensitive topics staff should avoid"
+              className="min-h-20 w-full rounded-xl border p-3"
+            />
             <button className="rounded-xl bg-black px-4 py-2 text-white">
               Save hospitality profile
             </button>
@@ -434,8 +570,16 @@ export default async function CustomerPage({
         </Section>
 
         <Section title="Relationships">
-          <form action={relationshipAction} className="grid gap-3 sm:grid-cols-2">
-            <select name="related_person_id" required className="rounded-xl border px-3 py-2">
+          <form
+            action={relationshipAction}
+            className="grid gap-3 sm:grid-cols-2"
+          >
+            <select
+              aria-label="Choose a related person"
+              name="related_person_id"
+              required
+              className="rounded-xl border px-3 py-2"
+            >
               <option value="">Choose related customer</option>
               {options.map((option) => (
                 <option key={option.id} value={option.id}>
@@ -443,8 +587,17 @@ export default async function CustomerPage({
                 </option>
               ))}
             </select>
-            <input name="relationship_type" required placeholder="Relationship, e.g. spouse" className="rounded-xl border px-3 py-2" />
-            <input name="notes" placeholder="Notes" className="rounded-xl border px-3 py-2 sm:col-span-2" />
+            <input
+              name="relationship_type"
+              required
+              placeholder="Relationship, e.g. spouse"
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="notes"
+              placeholder="Notes"
+              className="rounded-xl border px-3 py-2 sm:col-span-2"
+            />
             <button className="rounded-xl border px-4 py-2 sm:col-span-2">
               Add relationship
             </button>
@@ -452,13 +605,13 @@ export default async function CustomerPage({
           <div className="mt-5 space-y-2">
             {relationships.map((relationship) => {
               const related = one(
-                relationship.related_person as
-                  | PersonName
-                  | PersonName[]
-                  | null,
+                relationship.related_person as PersonName | PersonName[] | null,
               );
               return (
-                <div key={relationship.id} className="rounded-xl bg-neutral-50 p-3 text-sm">
+                <div
+                  key={relationship.id}
+                  className="rounded-xl bg-neutral-50 p-3 text-sm"
+                >
                   {displayName(related)} · {relationship.relationship_type}
                 </div>
               );
@@ -468,19 +621,44 @@ export default async function CustomerPage({
 
         <Section title="Pets">
           <form action={petAction} className="grid gap-3 sm:grid-cols-2">
-            <input name="name" required placeholder="Pet name" className="rounded-xl border px-3 py-2" />
-            <input name="species" placeholder="Species" className="rounded-xl border px-3 py-2" />
-            <input name="breed" placeholder="Breed" className="rounded-xl border px-3 py-2" />
-            <input name="temperament" placeholder="Temperament" className="rounded-xl border px-3 py-2" />
-            <input name="notes" placeholder="Useful notes" className="rounded-xl border px-3 py-2 sm:col-span-2" />
+            <input
+              name="name"
+              required
+              placeholder="Pet name"
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="species"
+              placeholder="Species"
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="breed"
+              placeholder="Breed"
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="temperament"
+              placeholder="Temperament"
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="notes"
+              placeholder="Useful notes"
+              className="rounded-xl border px-3 py-2 sm:col-span-2"
+            />
             <button className="rounded-xl border px-4 py-2 sm:col-span-2">
               Add pet
             </button>
           </form>
           <div className="mt-5 flex flex-wrap gap-2">
             {pets.map((pet) => (
-              <span key={pet.id} className="rounded-full bg-neutral-100 px-3 py-1 text-sm">
-                {pet.name}{pet.species ? ` · ${pet.species}` : ""}
+              <span
+                key={pet.id}
+                className="rounded-full bg-neutral-100 px-3 py-1 text-sm"
+              >
+                {pet.name}
+                {pet.species ? ` · ${pet.species}` : ""}
               </span>
             ))}
           </div>
@@ -488,10 +666,28 @@ export default async function CustomerPage({
 
         <Section title="Important dates">
           <form action={dateAction} className="grid gap-3 sm:grid-cols-2">
-            <input name="date_type" required placeholder="Birthday, anniversary..." className="rounded-xl border px-3 py-2" />
-            <input name="date_value" required type="date" className="rounded-xl border px-3 py-2" />
-            <input name="label" placeholder="Label" className="rounded-xl border px-3 py-2" />
-            <input name="notes" placeholder="Notes" className="rounded-xl border px-3 py-2" />
+            <input
+              name="date_type"
+              required
+              placeholder="Birthday, anniversary..."
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="date_value"
+              required
+              type="date"
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="label"
+              placeholder="Label"
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="notes"
+              placeholder="Notes"
+              className="rounded-xl border px-3 py-2"
+            />
             <button className="rounded-xl border px-4 py-2 sm:col-span-2">
               Add date
             </button>
@@ -509,7 +705,12 @@ export default async function CustomerPage({
 
         <Section title="Referrals">
           <form action={referralAction} className="grid gap-3 sm:grid-cols-2">
-            <select name="referred_person_id" required className="rounded-xl border px-3 py-2">
+            <select
+              aria-label="Choose the person they referred"
+              name="referred_person_id"
+              required
+              className="rounded-xl border px-3 py-2"
+            >
               <option value="">Customer introduced by this person</option>
               {options.map((option) => (
                 <option key={option.id} value={option.id}>
@@ -517,8 +718,16 @@ export default async function CustomerPage({
                 </option>
               ))}
             </select>
-            <input name="source_context" placeholder="Context" className="rounded-xl border px-3 py-2" />
-            <input name="notes" placeholder="Notes" className="rounded-xl border px-3 py-2 sm:col-span-2" />
+            <input
+              name="source_context"
+              placeholder="Context"
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="notes"
+              placeholder="Notes"
+              className="rounded-xl border px-3 py-2 sm:col-span-2"
+            />
             <button className="rounded-xl border px-4 py-2 sm:col-span-2">
               Record referral
             </button>
@@ -526,13 +735,13 @@ export default async function CustomerPage({
           <div className="mt-5 space-y-2">
             {referrals.map((referral) => {
               const referred = one(
-                referral.referred_person as
-                  | PersonName
-                  | PersonName[]
-                  | null,
+                referral.referred_person as PersonName | PersonName[] | null,
               );
               return (
-                <div key={referral.id} className="rounded-xl bg-neutral-50 p-3 text-sm">
+                <div
+                  key={referral.id}
+                  className="rounded-xl bg-neutral-50 p-3 text-sm"
+                >
                   Introduced {displayName(referred)}
                   {referral.source_context
                     ? ` · ${referral.source_context}`
@@ -545,10 +754,27 @@ export default async function CustomerPage({
 
         <Section title="Milestones">
           <form action={milestoneAction} className="grid gap-3 sm:grid-cols-2">
-            <input name="milestone_type" placeholder="Milestone type" className="rounded-xl border px-3 py-2" />
-            <input name="title" required placeholder="Title" className="rounded-xl border px-3 py-2" />
-            <input name="occurred_at" type="datetime-local" className="rounded-xl border px-3 py-2" />
-            <input name="description" placeholder="Description" className="rounded-xl border px-3 py-2" />
+            <input
+              name="milestone_type"
+              placeholder="Milestone type"
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="title"
+              required
+              placeholder="Title"
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="occurred_at"
+              type="datetime-local"
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="description"
+              placeholder="Description"
+              className="rounded-xl border px-3 py-2"
+            />
             <button className="rounded-xl border px-4 py-2 sm:col-span-2">
               Add milestone
             </button>
@@ -565,15 +791,28 @@ export default async function CustomerPage({
 
         <Section title="Quick preferences">
           <form action={preferenceAction} className="grid gap-3 sm:grid-cols-2">
-            <input name="preference_type" required placeholder="Type, e.g. seating" className="rounded-xl border px-3 py-2" />
-            <input name="preference_value" required placeholder="Preference" className="rounded-xl border px-3 py-2" />
+            <input
+              name="preference_type"
+              required
+              placeholder="Type, e.g. seating"
+              className="rounded-xl border px-3 py-2"
+            />
+            <input
+              name="preference_value"
+              required
+              placeholder="Preference"
+              className="rounded-xl border px-3 py-2"
+            />
             <button className="rounded-xl border px-4 py-2 sm:col-span-2">
               Add preference
             </button>
           </form>
           <div className="mt-5 flex flex-wrap gap-2">
             {preferences.map((item) => (
-              <span key={item.id} className="rounded-full bg-neutral-100 px-3 py-1 text-sm">
+              <span
+                key={item.id}
+                className="rounded-full bg-neutral-100 px-3 py-1 text-sm"
+              >
                 {item.preference_type}: {item.preference_value}
               </span>
             ))}
@@ -582,15 +821,22 @@ export default async function CustomerPage({
 
         <Section title="Staff notes">
           <form action={noteAction} className="space-y-3">
-            <textarea name="note" required placeholder="Useful hospitality context" className="min-h-24 w-full rounded-xl border p-3" />
-            <select name="visibility" className="w-full rounded-xl border p-3">
+            <textarea
+              name="note"
+              required
+              placeholder="Useful hospitality context"
+              className="min-h-24 w-full rounded-xl border p-3"
+            />
+            <select
+              aria-label="Who can see this note"
+              name="visibility"
+              className="w-full rounded-xl border p-3"
+            >
               <option value="barista">Visible to baristas</option>
               <option value="manager">Managers only</option>
               <option value="private">Private</option>
             </select>
-            <button className="rounded-xl border px-4 py-2">
-              Add note
-            </button>
+            <button className="rounded-xl border px-4 py-2">Add note</button>
           </form>
           <div className="mt-5 space-y-3">
             {notes.map((note) => (
@@ -641,9 +887,7 @@ export default async function CustomerPage({
                 {memberships.map((membership, index) => {
                   const community = one(
                     membership.communities as
-                      | { name: string }
-                      | { name: string }[]
-                      | null,
+                      { name: string } | { name: string }[] | null,
                   );
                   return (
                     <div key={`community-${index}`}>

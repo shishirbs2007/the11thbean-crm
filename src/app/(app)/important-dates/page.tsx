@@ -17,10 +17,9 @@ type UpcomingDate = {
 export default async function ImportantDatesPage() {
   const { supabase } = await requireUser();
 
-  const { data, error } = await supabase.rpc(
-    "upcoming_important_dates",
-    { days_ahead: 90 },
-  );
+  const { data, error } = await supabase.rpc("upcoming_important_dates", {
+    days_ahead: 90,
+  });
 
   const dates = (data ?? []) as UpcomingDate[];
 
@@ -57,9 +56,7 @@ export default async function ImportantDatesPage() {
                 ).toLocaleDateString()}
               </div>
               <div className="text-sm sm:text-right">
-                {item.days_until === 0
-                  ? "Today"
-                  : `${item.days_until} days`}
+                {item.days_until === 0 ? "Today" : `${item.days_until} days`}
               </div>
             </Link>
           ))

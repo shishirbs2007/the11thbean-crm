@@ -36,9 +36,21 @@ export default async function AuditPage({
       />
 
       <form className="mt-7 grid gap-3 rounded-2xl border p-5 sm:grid-cols-3">
-        <input name="action" defaultValue={params.action || ""} placeholder="Action" className="rounded-xl border px-3 py-2" />
-        <input name="entity_type" defaultValue={params.entity_type || ""} placeholder="Entity type" className="rounded-xl border px-3 py-2" />
-        <button className="rounded-xl bg-black px-4 py-2 text-white">Filter</button>
+        <input
+          name="action"
+          defaultValue={params.action || ""}
+          placeholder="Action"
+          className="rounded-xl border px-3 py-2"
+        />
+        <input
+          name="entity_type"
+          defaultValue={params.entity_type || ""}
+          placeholder="Entity type"
+          className="rounded-xl border px-3 py-2"
+        />
+        <button className="rounded-xl bg-black px-4 py-2 text-white">
+          Filter
+        </button>
       </form>
 
       <ErrorPanel messages={[error?.message]} />
@@ -48,11 +60,16 @@ export default async function AuditPage({
           <p className="p-6 text-neutral-600">No audit events.</p>
         ) : (
           entries.map((entry) => (
-            <div key={entry.id} className="grid gap-2 border-b p-5 last:border-b-0 sm:grid-cols-5">
+            <div
+              key={entry.id}
+              className="grid gap-2 border-b p-5 last:border-b-0 sm:grid-cols-5"
+            >
               <span className="font-medium">{entry.action}</span>
               <span>{entry.entity_type}</span>
               <span className="font-mono text-xs">{entry.entity_id || ""}</span>
-              <span className="text-sm text-neutral-600">{entry.summary || ""}</span>
+              <span className="text-sm text-neutral-600">
+                {entry.summary || ""}
+              </span>
               <span className="text-sm text-neutral-500 sm:text-right">
                 {new Date(entry.created_at).toLocaleString()}
               </span>

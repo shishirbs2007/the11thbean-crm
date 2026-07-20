@@ -76,10 +76,7 @@ export default async function AudiencesPage() {
       />
 
       <ErrorPanel
-        messages={[
-          audiencesResult.error?.message,
-          rulesResult.error?.message,
-        ]}
+        messages={[audiencesResult.error?.message, rulesResult.error?.message]}
       />
 
       <div className="mt-8">
@@ -157,6 +154,7 @@ export default async function AudiencesPage() {
                 className="rounded-xl border px-3 py-2"
               />
               <select
+                aria-label="Channel"
                 name="channel"
                 defaultValue="email"
                 className="rounded-xl border px-3 py-2"
@@ -168,6 +166,7 @@ export default async function AudiencesPage() {
                 <option value="internal">Internal reminder</option>
               </select>
               <select
+                aria-label="Purpose"
                 name="purpose"
                 defaultValue="marketing"
                 className="rounded-xl border px-3 py-2"
@@ -179,6 +178,7 @@ export default async function AudiencesPage() {
                 ))}
               </select>
               <select
+                aria-label="How rules combine"
                 name="match_mode"
                 defaultValue="any"
                 className="rounded-xl border px-3 py-2 sm:col-span-2"
@@ -223,6 +223,7 @@ export default async function AudiencesPage() {
                         )}
                         {rule.accepts_reference_id && (
                           <select
+                            aria-label={`Which community for "${rule.label}"`}
                             name={`reference_id_${rule.key}`}
                             className="rounded-xl border px-3 py-2"
                           >

@@ -16,7 +16,9 @@ export default async function OperationsPage() {
         .order("name"),
       supabase
         .from("operational_runs")
-        .select("id, business_date, status, shift_name, operational_checklists(name)")
+        .select(
+          "id, business_date, status, shift_name, operational_checklists(name)",
+        )
         .order("business_date", { ascending: false })
         .limit(20),
     ]);
@@ -36,8 +38,9 @@ export default async function OperationsPage() {
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         {checklists.map((checklist) => {
-          const items = [...(checklist.operational_checklist_items ?? [])]
-            .sort((a, b) => a.sort_order - b.sort_order);
+          const items = [...(checklist.operational_checklist_items ?? [])].sort(
+            (a, b) => a.sort_order - b.sort_order,
+          );
 
           return (
             <section key={checklist.id} className="rounded-2xl border p-6">

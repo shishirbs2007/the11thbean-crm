@@ -25,7 +25,8 @@ export default async function StaffPage() {
       <div className="mt-7 overflow-hidden rounded-2xl border">
         {roles.length === 0 ? (
           <p className="p-6 text-neutral-600">
-            No roles assigned yet. Claim the first administrator role in Settings.
+            No roles assigned yet. Claim the first administrator role in
+            Settings.
           </p>
         ) : (
           roles.map((item) => (

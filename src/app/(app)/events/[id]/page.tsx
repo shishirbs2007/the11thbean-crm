@@ -48,7 +48,7 @@ type Candidate = {
 
 function one<T>(value: T | T[] | null): T | null {
   if (!value) return null;
-  return Array.isArray(value) ? value[0] ?? null : value;
+  return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
 function displayName(
@@ -184,10 +184,7 @@ export default async function EventDetailPage({
               ? capacityLabel(state)
               : `${capacityLabel(state)} · ${remaining} left`,
           ],
-          [
-            "Turnout",
-            turnout === null ? "Not marked off yet" : `${turnout}%`,
-          ],
+          ["Turnout", turnout === null ? "Not marked off yet" : `${turnout}%`],
         ].map(([label, text]) => (
           <div key={label} className="rounded-2xl border p-5">
             <p className="text-sm text-neutral-500">{label}</p>
@@ -249,6 +246,7 @@ export default async function EventDetailPage({
         >
           <form action={register} className="grid gap-3">
             <select
+              aria-label="Choose a customer"
               name="person_id"
               required
               className="rounded-xl border px-3 py-2"
@@ -403,6 +401,7 @@ export default async function EventDetailPage({
               className="rounded-xl border px-3 py-2"
             />
             <select
+              aria-label="Choose the hosting community"
               name="community_id"
               defaultValue={event.community_id || ""}
               className="rounded-xl border px-3 py-2"

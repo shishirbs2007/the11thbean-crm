@@ -57,8 +57,9 @@ export default async function CommunicationsPage() {
         description="Own the decisioning, consent, templates, campaigns and history. Let specialist providers handle delivery."
       />
 
-      <ErrorPanel messages={[templatesError?.message ||
-            campaignsError?.message]} />
+      <ErrorPanel
+        messages={[templatesError?.message || campaignsError?.message]}
+      />
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <article className="rounded-2xl border p-5">
@@ -91,6 +92,7 @@ export default async function CommunicationsPage() {
             />
             <div className="grid gap-3 sm:grid-cols-2">
               <select
+                aria-label="Channel"
                 name="channel"
                 className="rounded-xl border px-4 py-3"
               >
@@ -98,6 +100,7 @@ export default async function CommunicationsPage() {
                 <option value="whatsapp">WhatsApp</option>
               </select>
               <select
+                aria-label="Category"
                 name="category"
                 className="rounded-xl border px-4 py-3"
               >
@@ -138,6 +141,7 @@ export default async function CommunicationsPage() {
               className="min-h-24 w-full rounded-xl border p-4"
             />
             <select
+              aria-label="Channel"
               name="channel"
               className="w-full rounded-xl border px-4 py-3"
             >
@@ -146,6 +150,7 @@ export default async function CommunicationsPage() {
               <option value="mixed">Mixed</option>
             </select>
             <select
+              aria-label="Choose a template"
               name="template_id"
               className="w-full rounded-xl border px-4 py-3"
             >
@@ -157,6 +162,7 @@ export default async function CommunicationsPage() {
               ))}
             </select>
             <select
+              aria-label="Choose a segment"
               name="segment_id"
               className="w-full rounded-xl border px-4 py-3"
             >
@@ -182,9 +188,7 @@ export default async function CommunicationsPage() {
               <p className="text-sm text-neutral-500">No campaigns yet.</p>
             ) : (
               campaigns.map((campaign) => {
-                const template = Array.isArray(
-                  campaign.communication_templates,
-                )
+                const template = Array.isArray(campaign.communication_templates)
                   ? campaign.communication_templates[0]
                   : campaign.communication_templates;
 
@@ -210,7 +214,8 @@ export default async function CommunicationsPage() {
           <div className="mt-5 space-y-3">
             {providers.length === 0 ? (
               <p className="text-sm text-neutral-500">
-                No provider configured. Email and WhatsApp delivery remain disabled until credentials are added.
+                No provider configured. Email and WhatsApp delivery remain
+                disabled until credentials are added.
               </p>
             ) : (
               providers.map((provider) => (
@@ -221,9 +226,7 @@ export default async function CommunicationsPage() {
                   <span>
                     {provider.channel} · {provider.provider}
                   </span>
-                  <span>
-                    {provider.is_active ? "Active" : "Inactive"}
-                  </span>
+                  <span>{provider.is_active ? "Active" : "Inactive"}</span>
                 </div>
               ))
             )}

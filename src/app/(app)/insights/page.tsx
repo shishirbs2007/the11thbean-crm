@@ -7,40 +7,36 @@ import { recalculateHealth } from "./actions";
 export default async function InsightsPage() {
   const { supabase } = await requireUser();
 
-  const [
-    healthResult,
-    dormantResult,
-    valuableResult,
-    referrersResult,
-  ] = await Promise.all([
-    supabase
-      .from("customer_health")
-      .select(
-        "person_id, health_score, churn_risk, lifetime_value, average_ticket, total_visits, last_visit_at, people(first_name,last_name,preferred_name)",
-      )
-      .order("health_score", { ascending: false })
-      .limit(100),
-    supabase
-      .from("customer_health")
-      .select(
-        "person_id, churn_risk, last_visit_at, people(first_name,last_name,preferred_name)",
-      )
-      .gte("churn_risk", 60)
-      .order("churn_risk", { ascending: false })
-      .limit(20),
-    supabase
-      .from("customer_health")
-      .select(
-        "person_id, lifetime_value, total_visits, people(first_name,last_name,preferred_name)",
-      )
-      .order("lifetime_value", { ascending: false })
-      .limit(20),
-    supabase
-      .from("referrals")
-      .select(
-        "referrer_person_id, people!referrals_referrer_person_id_fkey(first_name,last_name,preferred_name)",
-      ),
-  ]);
+  const [healthResult, dormantResult, valuableResult, referrersResult] =
+    await Promise.all([
+      supabase
+        .from("customer_health")
+        .select(
+          "person_id, health_score, churn_risk, lifetime_value, average_ticket, total_visits, last_visit_at, people(first_name,last_name,preferred_name)",
+        )
+        .order("health_score", { ascending: false })
+        .limit(100),
+      supabase
+        .from("customer_health")
+        .select(
+          "person_id, churn_risk, last_visit_at, people(first_name,last_name,preferred_name)",
+        )
+        .gte("churn_risk", 60)
+        .order("churn_risk", { ascending: false })
+        .limit(20),
+      supabase
+        .from("customer_health")
+        .select(
+          "person_id, lifetime_value, total_visits, people(first_name,last_name,preferred_name)",
+        )
+        .order("lifetime_value", { ascending: false })
+        .limit(20),
+      supabase
+        .from("referrals")
+        .select(
+          "referrer_person_id, people!referrals_referrer_person_id_fkey(first_name,last_name,preferred_name)",
+        ),
+    ]);
 
   const health = healthResult.data ?? [];
   const dormant = dormantResult.data ?? [];
@@ -57,10 +53,8 @@ export default async function InsightsPage() {
   const averageHealth =
     health.length === 0
       ? 0
-      : health.reduce(
-          (sum, row) => sum + Number(row.health_score ?? 0),
-          0,
-        ) / health.length;
+      : health.reduce((sum, row) => sum + Number(row.health_score ?? 0), 0) /
+        health.length;
 
   const totalValue = health.reduce(
     (sum, row) => sum + Number(row.lifetime_value ?? 0),
@@ -157,9 +151,7 @@ export default async function InsightsPage() {
                   className="flex justify-between rounded-xl bg-neutral-50 p-4 text-sm"
                 >
                   <span>
-                    {person?.preferred_name ||
-                      person?.first_name ||
-                      "Unknown"}{" "}
+                    {person?.preferred_name || person?.first_name || "Unknown"}{" "}
                     {person?.last_name || ""}
                   </span>
                   <span>
@@ -179,9 +171,7 @@ export default async function InsightsPage() {
         </div>
 
         {health.map((row) => {
-          const person = Array.isArray(row.people)
-            ? row.people[0]
-            : row.people;
+          const person = Array.isArray(row.people) ? row.people[0] : row.people;
 
           return (
             <Link

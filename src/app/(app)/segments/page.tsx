@@ -38,13 +38,48 @@ export default async function SegmentsPage() {
 
       <ErrorPanel messages={[segmentsResult.error?.message]} />
 
-      <form action={createSegment} className="mt-7 grid gap-3 rounded-2xl border p-6 sm:grid-cols-2 lg:grid-cols-3">
-        <input name="name" required placeholder="Segment name" className="rounded-xl border px-3 py-2" />
-        <input name="description" placeholder="Description" className="rounded-xl border px-3 py-2 lg:col-span-2" />
-        <input name="customer_status" placeholder="Customer status, optional" className="rounded-xl border px-3 py-2" />
-        <input name="minimum_visits" type="number" min="0" placeholder="Minimum visits" className="rounded-xl border px-3 py-2" />
-        <input name="minimum_lifetime_value" type="number" min="0" placeholder="Minimum lifetime value" className="rounded-xl border px-3 py-2" />
-        <input name="maximum_churn_risk" type="number" min="0" max="100" placeholder="Maximum churn risk" className="rounded-xl border px-3 py-2" />
+      <form
+        action={createSegment}
+        className="mt-7 grid gap-3 rounded-2xl border p-6 sm:grid-cols-2 lg:grid-cols-3"
+      >
+        <input
+          name="name"
+          required
+          placeholder="Segment name"
+          className="rounded-xl border px-3 py-2"
+        />
+        <input
+          name="description"
+          placeholder="Description"
+          className="rounded-xl border px-3 py-2 lg:col-span-2"
+        />
+        <input
+          name="customer_status"
+          placeholder="Customer status, optional"
+          className="rounded-xl border px-3 py-2"
+        />
+        <input
+          name="minimum_visits"
+          type="number"
+          min="0"
+          placeholder="Minimum visits"
+          className="rounded-xl border px-3 py-2"
+        />
+        <input
+          name="minimum_lifetime_value"
+          type="number"
+          min="0"
+          placeholder="Minimum lifetime value"
+          className="rounded-xl border px-3 py-2"
+        />
+        <input
+          name="maximum_churn_risk"
+          type="number"
+          min="0"
+          max="100"
+          placeholder="Maximum churn risk"
+          className="rounded-xl border px-3 py-2"
+        />
         <button className="rounded-xl bg-black px-4 py-2 text-white sm:col-span-2 lg:col-span-3">
           Create segment
         </button>
@@ -62,8 +97,16 @@ export default async function SegmentsPage() {
               {JSON.stringify(segment.filter_definition, null, 2)}
             </pre>
 
-            <form action={addSegmentMember.bind(null, segment.id)} className="mt-5 flex gap-2">
-              <select name="person_id" required className="min-w-0 flex-1 rounded-xl border px-3 py-2">
+            <form
+              action={addSegmentMember.bind(null, segment.id)}
+              className="mt-5 flex gap-2"
+            >
+              <select
+                aria-label="Choose a customer"
+                name="person_id"
+                required
+                className="min-w-0 flex-1 rounded-xl border px-3 py-2"
+              >
                 <option value="">Add customer</option>
                 {people.map((person) => (
                   <option key={person.id} value={person.id}>
@@ -81,12 +124,23 @@ export default async function SegmentsPage() {
                   ? membership.people[0]
                   : membership.people;
                 return (
-                  <div key={membership.person_id} className="flex justify-between rounded-xl bg-neutral-50 p-3 text-sm">
+                  <div
+                    key={membership.person_id}
+                    className="flex justify-between rounded-xl bg-neutral-50 p-3 text-sm"
+                  >
                     <span>
-                      {person?.preferred_name || person?.first_name || "Unknown"}{" "}
+                      {person?.preferred_name ||
+                        person?.first_name ||
+                        "Unknown"}{" "}
                       {person?.last_name || ""}
                     </span>
-                    <form action={removeSegmentMember.bind(null, segment.id, membership.person_id)}>
+                    <form
+                      action={removeSegmentMember.bind(
+                        null,
+                        segment.id,
+                        membership.person_id,
+                      )}
+                    >
                       <button className="text-red-700">Remove</button>
                     </form>
                   </div>

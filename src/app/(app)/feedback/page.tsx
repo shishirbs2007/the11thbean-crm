@@ -40,7 +40,11 @@ export default async function FeedbackPage() {
         action={createFeedback}
         className="mt-7 grid gap-3 rounded-2xl border p-5 sm:grid-cols-2"
       >
-        <select name="person_id" className="rounded-xl border px-4 py-3">
+        <select
+          aria-label="Choose a customer"
+          name="person_id"
+          className="rounded-xl border px-4 py-3"
+        >
           <option value="">Anonymous or unknown customer</option>
           {people.map((person) => (
             <option key={person.id} value={person.id}>
@@ -51,6 +55,7 @@ export default async function FeedbackPage() {
         </select>
 
         <select
+          aria-label="Type of feedback"
           name="feedback_type"
           className="rounded-xl border px-4 py-3"
         >
@@ -61,7 +66,11 @@ export default async function FeedbackPage() {
           <option value="service_recovery">Service recovery</option>
         </select>
 
-        <select name="rating" className="rounded-xl border px-4 py-3">
+        <select
+          aria-label="Rating"
+          name="rating"
+          className="rounded-xl border px-4 py-3"
+        >
           <option value="">No rating</option>
           <option value="5">5</option>
           <option value="4">4</option>

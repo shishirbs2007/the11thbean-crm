@@ -122,8 +122,11 @@ export default async function HouseholdsPage({
         </div>
       </div>
 
-      <ErrorPanel messages={[householdsResult.error?.message ||
-            peopleResult.error?.message]} />
+      <ErrorPanel
+        messages={[
+          householdsResult.error?.message || peopleResult.error?.message,
+        ]}
+      />
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[1.5fr_1fr]">
         <section className="rounded-2xl border p-6">
@@ -137,6 +140,7 @@ export default async function HouseholdsPage({
               />
 
               <select
+                aria-label="Status"
                 name="status"
                 defaultValue={status}
                 className="rounded-xl border px-4 py-2"
@@ -167,12 +171,8 @@ export default async function HouseholdsPage({
               </div>
             ) : (
               households.map((household) => {
-                const memberCount = Array.isArray(
-                  household.household_members,
-                )
-                  ? Number(
-                      household.household_members[0]?.count ?? 0,
-                    )
+                const memberCount = Array.isArray(household.household_members)
+                  ? Number(household.household_members[0]?.count ?? 0)
                   : 0;
 
                 return (
@@ -255,6 +255,7 @@ export default async function HouseholdsPage({
             />
 
             <select
+              aria-label="Type of household"
               name="household_type"
               defaultValue="family"
               className="w-full rounded-xl border px-3 py-2"
@@ -268,6 +269,7 @@ export default async function HouseholdsPage({
             </select>
 
             <select
+              aria-label="Choose the primary contact"
               name="primary_contact_id"
               className="w-full rounded-xl border px-3 py-2"
             >

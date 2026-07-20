@@ -29,9 +29,11 @@ export default async function CommunitiesPage() {
 
   const communities: CommunityItem[] = (data ?? []) as CommunityItem[];
   const health = new Map(
-    ((healthResult.data ?? []) as (CommunityHealthRow & {
-      community_id: string;
-    })[]).map((row) => [row.community_id, row]),
+    (
+      (healthResult.data ?? []) as (CommunityHealthRow & {
+        community_id: string;
+      })[]
+    ).map((row) => [row.community_id, row]),
   );
 
   return (

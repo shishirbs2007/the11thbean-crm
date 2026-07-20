@@ -34,13 +34,12 @@ type HouseholdMember = {
 
 function one<T>(value: T | T[] | null): T | null {
   if (!value) return null;
-  return Array.isArray(value) ? value[0] ?? null : value;
+  return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
-function displayName(person: Pick<
-  Person,
-  "first_name" | "last_name" | "preferred_name"
->): string {
+function displayName(
+  person: Pick<Person, "first_name" | "last_name" | "preferred_name">,
+): string {
   return `${person.preferred_name || person.first_name} ${
     person.last_name || ""
   }`.trim();
@@ -112,9 +111,7 @@ export default async function HouseholdPage({
       .maybeSingle(),
     supabase
       .from("people")
-      .select(
-        "id, first_name, last_name, preferred_name, phone, email",
-      )
+      .select("id, first_name, last_name, preferred_name, phone, email")
       .eq("is_active", true)
       .order("first_name")
       .limit(1000),
@@ -137,9 +134,7 @@ export default async function HouseholdPage({
   const people = (peopleResult.data ?? []) as Person[];
 
   const memberIds = new Set(members.map((member) => member.person_id));
-  const availablePeople = people.filter(
-    (person) => !memberIds.has(person.id),
-  );
+  const availablePeople = people.filter((person) => !memberIds.has(person.id));
 
   const updateAction = updateHousehold.bind(null, id);
   const memberAction = addHouseholdMember.bind(null, id);
@@ -148,15 +143,13 @@ export default async function HouseholdPage({
   const archiveAction = archiveHousehold.bind(null, id);
   const restoreAction = restoreHousehold.bind(null, id);
 
-  const errors = results
-    .map((result) => result.error?.message)
-    .filter(Boolean);
+  const errors = results.map((result) => result.error?.message).filter(Boolean);
 
   const primaryMember = members.find((member) => member.is_primary);
   const primaryPerson = primaryMember
     ? one(primaryMember.person)
-    : people.find((person) => person.id === household.primary_contact_id) ??
-      null;
+    : (people.find((person) => person.id === household.primary_contact_id) ??
+      null);
 
   return (
     <main className="mx-auto max-w-7xl px-5 py-10">
@@ -220,6 +213,7 @@ export default async function HouseholdPage({
             />
 
             <select
+              aria-label="Type of household"
               name="household_type"
               defaultValue={household.household_type || "family"}
               className="rounded-xl border px-3 py-2"
@@ -233,6 +227,7 @@ export default async function HouseholdPage({
             </select>
 
             <select
+              aria-label="Choose the primary contact"
               name="primary_contact_id"
               defaultValue={household.primary_contact_id || ""}
               className="rounded-xl border px-3 py-2"
@@ -299,6 +294,7 @@ export default async function HouseholdPage({
         >
           <form action={memberAction} className="grid gap-3 sm:grid-cols-2">
             <select
+              aria-label="Choose a customer"
               name="person_id"
               required
               className="rounded-xl border px-3 py-2"
@@ -392,7 +388,10 @@ export default async function HouseholdPage({
         </Section>
 
         <Section title="Hospitality preferences">
-          <form action={preferencesAction} className="grid gap-3 sm:grid-cols-2">
+          <form
+            action={preferencesAction}
+            className="grid gap-3 sm:grid-cols-2"
+          >
             <input
               name="favourite_table"
               defaultValue={preferences?.favourite_table || ""}

@@ -14,21 +14,20 @@ type PersonOption = {
 export default async function FollowUpsPage() {
   const { supabase } = await requireUser();
 
-  const [{ data: tasksData, error }, { data: peopleData }] =
-    await Promise.all([
-      supabase
-        .from("customer_tasks")
-        .select(
-          "id, person_id, title, description, due_at, priority, status, people(first_name, last_name, preferred_name)",
-        )
-        .eq("status", "open")
-        .order("due_at", { ascending: true, nullsFirst: false }),
-      supabase
-        .from("people")
-        .select("id, first_name, last_name, preferred_name")
-        .eq("is_active", true)
-        .order("first_name"),
-    ]);
+  const [{ data: tasksData, error }, { data: peopleData }] = await Promise.all([
+    supabase
+      .from("customer_tasks")
+      .select(
+        "id, person_id, title, description, due_at, priority, status, people(first_name, last_name, preferred_name)",
+      )
+      .eq("status", "open")
+      .order("due_at", { ascending: true, nullsFirst: false }),
+    supabase
+      .from("people")
+      .select("id, first_name, last_name, preferred_name")
+      .eq("is_active", true)
+      .order("first_name"),
+  ]);
 
   const tasks = tasksData ?? [];
   const people = (peopleData ?? []) as PersonOption[];
@@ -48,6 +47,7 @@ export default async function FollowUpsPage() {
         className="mt-7 grid gap-3 rounded-2xl border p-5 sm:grid-cols-2"
       >
         <select
+          aria-label="Choose a customer"
           name="person_id"
           className="rounded-xl border px-4 py-3"
         >
@@ -74,6 +74,7 @@ export default async function FollowUpsPage() {
         />
 
         <select
+          aria-label="Priority"
           name="priority"
           className="rounded-xl border px-4 py-3"
         >

@@ -25,7 +25,7 @@ type RelatedPerson = Person | Person[] | null;
 
 function one<T>(value: T | T[] | null): T | null {
   if (!value) return null;
-  return Array.isArray(value) ? value[0] ?? null : value;
+  return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
 function displayName(person: Person): string {
@@ -37,9 +37,7 @@ function displayName(person: Person): string {
 function localDateTimeValue(): string {
   const date = new Date();
   const offset = date.getTimezoneOffset();
-  return new Date(date.getTime() - offset * 60_000)
-    .toISOString()
-    .slice(0, 16);
+  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
 }
 
 export default async function VisitsPage({
@@ -59,10 +57,8 @@ export default async function VisitsPage({
   const from = (requestedPage - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  let visitsQuery = supabase
-    .from("visits")
-    .select(
-      `
+  let visitsQuery = supabase.from("visits").select(
+    `
         id,
         person_id,
         visited_at,
@@ -83,8 +79,8 @@ export default async function VisitsPage({
           phone
         )
       `,
-      { count: "exact" },
-    );
+    { count: "exact" },
+  );
 
   if (source) visitsQuery = visitsQuery.eq("source", source);
   if (dateFrom) {
@@ -111,14 +107,10 @@ export default async function VisitsPage({
   }
 
   const [visitsResult, peopleResult] = await Promise.all([
-    visitsQuery
-      .order("visited_at", { ascending: false })
-      .range(from, to),
+    visitsQuery.order("visited_at", { ascending: false }).range(from, to),
     supabase
       .from("people")
-      .select(
-        "id, first_name, last_name, preferred_name, phone",
-      )
+      .select("id, first_name, last_name, preferred_name, phone")
       .eq("is_active", true)
       .order("first_name")
       .limit(1500),
@@ -166,8 +158,9 @@ export default async function VisitsPage({
         </div>
       </div>
 
-      <ErrorPanel messages={[visitsResult.error?.message ||
-            peopleResult.error?.message]} />
+      <ErrorPanel
+        messages={[visitsResult.error?.message || peopleResult.error?.message]}
+      />
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[1.5fr_1fr]">
         <section className="rounded-2xl border p-6">
@@ -180,6 +173,7 @@ export default async function VisitsPage({
             />
 
             <select
+              aria-label="Where this came from"
               name="source"
               defaultValue={source}
               className="rounded-xl border px-3 py-2"
@@ -226,9 +220,7 @@ export default async function VisitsPage({
               </div>
             ) : (
               visits.map((visit) => {
-                const person = one(
-                  visit.person as RelatedPerson,
-                );
+                const person = one(visit.person as RelatedPerson);
 
                 return (
                   <Link
@@ -319,6 +311,7 @@ export default async function VisitsPage({
 
           <form action={createVisit} className="mt-5 space-y-3">
             <select
+              aria-label="Choose a customer"
               name="person_id"
               required
               className="w-full rounded-xl border px-3 py-2"
@@ -341,6 +334,7 @@ export default async function VisitsPage({
 
             <div className="grid gap-3 sm:grid-cols-2">
               <select
+                aria-label="Type of visit"
                 name="visit_type"
                 defaultValue="walk_in"
                 className="rounded-xl border px-3 py-2"
@@ -398,6 +392,7 @@ export default async function VisitsPage({
               />
 
               <select
+                aria-label="Payment method"
                 name="payment_method"
                 className="rounded-xl border px-3 py-2"
               >
@@ -411,6 +406,7 @@ export default async function VisitsPage({
               </select>
 
               <select
+                aria-label="Where this came from"
                 name="source"
                 defaultValue="manual"
                 className="rounded-xl border px-3 py-2"
@@ -440,6 +436,7 @@ export default async function VisitsPage({
               />
 
               <select
+                aria-label="Satisfaction score"
                 name="satisfaction_score"
                 className="rounded-xl border px-3 py-2"
               >
