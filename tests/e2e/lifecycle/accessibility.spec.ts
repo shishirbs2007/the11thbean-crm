@@ -11,6 +11,7 @@ import { assertWritesAllowed } from "../support/environment";
  */
 
 const PAGES = [
+  ["/arrival", "Arrival"],
   ["/briefing", "Daily briefing"],
   ["/customers", "Customers"],
   ["/intelligence", "How the café is doing"],

@@ -31,7 +31,6 @@ test.describe.serial("Arrival", () => {
     if (error) throw error;
     regularId = data.id;
 
-    // A known allergy and a usual, so the counter card has something to show.
     const { error: profileError } = await admin
       .from("customer_hospitality_profiles")
       .upsert({
@@ -71,17 +70,36 @@ test.describe.serial("Arrival", () => {
     }
   });
 
-  test("one tap records the visit and shows what to say", async ({ page }) => {
-    await page.goto(`/arrival?q=Regular${timestamp}`);
+  test("typing a name shows matches without a page navigation", async ({
+    page,
+  }) => {
+    await page.goto("/arrival");
+    const before = page.url();
 
     await page
-      .getByRole("region", { name: "Find a guest" })
-      .getByRole("listitem")
-      .filter({ hasText: `Reg${timestamp}` })
-      .getByRole("button", { name: /here/i })
+      .getByLabel("Search for a guest by name or phone")
+      .fill(`Reg${timestamp}`);
+
+    // Matches appear live; the URL never changed.
+    await expect(
+      page.getByRole("button", { name: new RegExp(`Reg${timestamp}`) }),
+    ).toBeVisible();
+    expect(page.url()).toBe(before);
+  });
+
+  test("tapping a match records the visit and shows what to say", async ({
+    page,
+  }) => {
+    await page.goto("/arrival");
+
+    await page
+      .getByLabel("Search for a guest by name or phone")
+      .fill(`Reg${timestamp}`);
+
+    await page
+      .getByRole("button", { name: new RegExp(`Reg${timestamp}`) })
       .click();
 
-    // The allergy must be impossible to miss.
     await expect(page.getByText("Allergic to Shellfish")).toBeVisible();
     await expect(page.getByText("Cortado")).toBeVisible();
     await expect(page.getByText("First time here")).toBeVisible();
@@ -89,24 +107,24 @@ test.describe.serial("Arrival", () => {
     const admin = stagingAdminClient();
     const { data: visits } = await admin
       .from("visits")
-      .select("id, source, party_size")
+      .select("id, source")
       .eq("person_id", regularId);
 
     expect(visits).toHaveLength(1);
     expect(visits?.[0].source).toBe("arrival");
   });
 
-  test("a second tap within the hour does not invent a second visit", async ({
+  test("pressing Enter welcomes the top match with no mouse", async ({
     page,
   }) => {
-    await page.goto(`/arrival?q=Regular${timestamp}`);
+    await page.goto("/arrival");
 
-    await page
-      .getByRole("region", { name: "Find a guest" })
-      .getByRole("listitem")
-      .filter({ hasText: `Reg${timestamp}` })
-      .getByRole("button", { name: /here/i })
-      .click();
+    const search = page.getByLabel("Search for a guest by name or phone");
+    await search.fill(`Reg${timestamp}`);
+    await expect(
+      page.getByRole("button", { name: new RegExp(`Reg${timestamp}`) }),
+    ).toBeVisible();
+    await search.press("Enter");
 
     await expect(page.getByText(/Allergic to Shellfish/)).toBeVisible();
 
@@ -116,15 +134,28 @@ test.describe.serial("Arrival", () => {
       .select("id")
       .eq("person_id", regularId);
 
-    // Staff will double-tap. The café should absorb that, not record a fiction.
+    // Still one: the double interaction within the hour is one visit.
     expect(visits).toHaveLength(1);
+  });
+
+  test("a scanned card (an id) resolves to that guest", async ({ page }) => {
+    await page.goto("/arrival");
+
+    // A keyboard-wedge scanner types the encoded id then Enter.
+    const search = page.getByLabel("Search for a guest by name or phone");
+    await search.fill(regularId);
+    await expect(
+      page.getByRole("button", { name: new RegExp(`Reg${timestamp}`) }),
+    ).toBeVisible();
+    await search.press("Enter");
+
+    await expect(page.getByText(/Allergic to Shellfish/)).toBeVisible();
   });
 
   test("adds somebody new from a name and a phone", async ({ page }) => {
     await page.goto("/arrival");
 
     const form = page.getByRole("region", { name: "Somebody new" });
-
     await form.getByLabel("Guest name").fill(`Newcomer${timestamp} Patel`);
     await form.getByLabel("Phone number").fill(newPhone);
     await form.getByRole("button", { name: "Add and welcome" }).click();
@@ -151,8 +182,6 @@ test.describe.serial("Arrival", () => {
     await page.goto("/arrival");
 
     const form = page.getByRole("region", { name: "Somebody new" });
-
-    // Same number, entered again by a busy counter.
     await form.getByLabel("Guest name").fill(`Regular${timestamp} Guest`);
     await form.getByLabel("Phone number").fill(phone);
     await form.getByRole("button", { name: "Add and welcome" }).click();
@@ -165,7 +194,30 @@ test.describe.serial("Arrival", () => {
     expect(data).toHaveLength(1);
   });
 
-  test("shows everyone recorded this shift", async ({ page }) => {
+  test("refuses a new guest with no way to recognise them again", async ({
+    page,
+  }) => {
+    await page.goto("/arrival");
+
+    const form = page.getByRole("region", { name: "Somebody new" });
+    await form.getByLabel("Guest name").fill(`Nameless${timestamp}`);
+    await form.getByRole("button", { name: "Add and welcome" }).click();
+
+    // The failure is shown inline; nothing is created.
+    await expect(
+      form.getByText(/phone number or email is needed/i),
+    ).toBeVisible();
+
+    const admin = stagingAdminClient();
+    const { data } = await admin
+      .from("people")
+      .select("id")
+      .eq("first_name", `Nameless${timestamp}`);
+
+    expect(data).toHaveLength(0);
+  });
+
+  test("the shift list updates as guests arrive", async ({ page }) => {
     await page.goto("/arrival");
 
     const today = page.getByRole("region", { name: "In today" });
@@ -176,24 +228,5 @@ test.describe.serial("Arrival", () => {
     await expect(
       today.getByRole("link", { name: new RegExp(`Newcomer${timestamp}`) }),
     ).toBeVisible();
-  });
-
-  test("refuses a new guest with no way to recognise them again", async ({
-    page,
-  }) => {
-    await page.goto("/arrival");
-
-    const form = page.getByRole("region", { name: "Somebody new" });
-    await form.getByLabel("Guest name").fill(`Nameless${timestamp}`);
-    await form.getByRole("button", { name: "Add and welcome" }).click();
-
-    // Without a phone or email the café could never match their next order.
-    const admin = stagingAdminClient();
-    const { data } = await admin
-      .from("people")
-      .select("id")
-      .eq("first_name", `Nameless${timestamp}`);
-
-    expect(data).toHaveLength(0);
   });
 });
