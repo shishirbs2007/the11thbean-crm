@@ -151,3 +151,38 @@ export async function quickAddAndWelcome(
 
   return { ok: true, context: (data ?? {}) as Record<string, unknown> };
 }
+
+export type ArrivalMetric = {
+  event_type:
+    | "search"
+    | "arrival"
+    | "quick_add"
+    | "duplicate_prevented"
+    | "retry"
+    | "abandoned_search";
+  input_method?: "keyboard" | "pointer" | "scan";
+  duration_ms?: number;
+};
+
+/**
+ * Records one anonymous operational event.
+ *
+ * Fire-and-forget by design: measuring an arrival must never delay or fail the
+ * arrival itself, so this swallows every error. Nothing here carries a person,
+ * a staff id, or any search text — only a category and a duration.
+ */
+export async function recordArrivalMetric(metric: ArrivalMetric): Promise<void> {
+  try {
+    const { supabase } = await requireUser();
+    await supabase.rpc("record_arrival_event", {
+      p_event_type: metric.event_type,
+      p_input_method: metric.input_method ?? null,
+      p_duration_ms:
+        typeof metric.duration_ms === "number"
+          ? Math.round(metric.duration_ms)
+          : null,
+    });
+  } catch {
+    // Instrumentation never interferes with the thing it measures.
+  }
+}

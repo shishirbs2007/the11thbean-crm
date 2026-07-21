@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -9,6 +15,7 @@ import {
 } from "@/lib/intelligence/arrival";
 import {
   quickAddAndWelcome,
+  recordArrivalMetric,
   searchGuests,
   welcomeGuest,
   type GuestMatch,
@@ -22,6 +29,9 @@ import {
  * target is the whole interaction under five seconds with somebody waiting, so
  * every decision below trades a feature for a removed step or a removed thought.
  */
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export function ArrivalCounter() {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -37,6 +47,16 @@ export function ArrivalCounter() {
   const searchToken = useRef(0);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Timing state for anonymous metrics. queryStartedAt marks the first
+  // keystroke of the current search, so we can measure how long the whole
+  // interaction took; sawResults records that matches were shown, so a search
+  // that never leads to a welcome can be counted as abandoned. Nothing here
+  // leaves the browser except a category and a duration.
+  const queryStartedAt = useRef<number | null>(null);
+  const sawResults = useRef(false);
+  const welcomedFromSearch = useRef(false);
+  const nextInputMethod = useRef<"keyboard" | "pointer" | "scan">("pointer");
+
   // Search is driven from the change handler rather than an effect, so a
   // keystroke schedules exactly one debounced query and state only changes in
   // response to an event. A café LAN is fast; 150ms avoids a query per
@@ -48,6 +68,14 @@ export function ArrivalCounter() {
     const token = ++searchToken.current;
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
+    // A search that starts from an empty box that has not yet led anywhere is
+    // counted as abandoned, so we can tell whether staff search and give up.
+    if (queryStartedAt.current === null && trimmed.length >= 2) {
+      queryStartedAt.current = performance.now();
+      sawResults.current = false;
+      welcomedFromSearch.current = false;
+    }
+
     if (trimmed.length < 2) {
       setMatches([]);
       setSearching(false);
@@ -56,19 +84,32 @@ export function ArrivalCounter() {
 
     setSearching(true);
     debounceTimer.current = setTimeout(async () => {
+      const start = performance.now();
       const found = await searchGuests(trimmed);
       // Ignore a result that arrived after a newer keystroke.
       if (token === searchToken.current) {
         setMatches(found);
         setSearching(false);
+        if (found.length > 0) sawResults.current = true;
+        void recordArrivalMetric({
+          event_type: "search",
+          duration_ms: performance.now() - start,
+        });
       }
     }, 150);
   };
 
   const welcome = useCallback(
-    (personId: string) => {
+    (personId: string, isRetry = false) => {
       setError(null);
       setRetryId(personId);
+      const method = nextInputMethod.current;
+      const startedAt = queryStartedAt.current;
+
+      if (isRetry) {
+        void recordArrivalMetric({ event_type: "retry" });
+      }
+
       startWelcome(async () => {
         const result = await welcomeGuest(personId);
         if (result.ok) {
@@ -77,7 +118,18 @@ export function ArrivalCounter() {
           setRetryId(null);
           setQuery("");
           setMatches([]);
-          // Refresh the server-rendered "In today" list beneath.
+
+          // Time from the first keystroke of this search to the welcome, and
+          // how it was driven. Aggregated only — no person, no search text.
+          welcomedFromSearch.current = true;
+          void recordArrivalMetric({
+            event_type: "arrival",
+            input_method: method,
+            duration_ms:
+              startedAt !== null ? performance.now() - startedAt : undefined,
+          });
+          queryStartedAt.current = null;
+
           router.refresh();
           inputRef.current?.focus();
         } else {
@@ -96,10 +148,30 @@ export function ArrivalCounter() {
       // ends its scan with Enter, so a scanned card resolves and welcomes in
       // the same motion.
       if (matches.length > 0) {
+        // A scanned id resolves to a single match; treat that as a scan.
+        nextInputMethod.current = UUID.test(query.trim())
+          ? "scan"
+          : "keyboard";
         welcome(matches[0].id);
       }
     }
   };
+
+  // A search that showed results but was left without welcoming anyone is
+  // abandoned. Recorded when the box is cleared or the component unmounts.
+  const flushAbandoned = useCallback(() => {
+    if (
+      queryStartedAt.current !== null &&
+      sawResults.current &&
+      !welcomedFromSearch.current
+    ) {
+      void recordArrivalMetric({ event_type: "abandoned_search" });
+    }
+    queryStartedAt.current = null;
+    sawResults.current = false;
+  }, []);
+
+  useEffect(() => flushAbandoned, [flushAbandoned]);
 
   return (
     <div className="space-y-6">
@@ -111,7 +183,7 @@ export function ArrivalCounter() {
           <p className="font-medium">{error}</p>
           {retryId && (
             <button
-              onClick={() => welcome(retryId)}
+              onClick={() => welcome(retryId, true)}
               className="rounded-xl border border-red-400 px-4 py-2 text-sm"
             >
               Try again
@@ -159,6 +231,7 @@ export function ArrivalCounter() {
               <li key={match.id}>
                 <button
                   onClick={() => {
+                    nextInputMethod.current = "pointer";
                     welcome(match.id);
                   }}
                   disabled={pending}
@@ -317,6 +390,9 @@ function QuickAdd({
               const known = Boolean(
                 (result.context as { already_known?: boolean }).already_known,
               );
+              void recordArrivalMetric({
+                event_type: known ? "duplicate_prevented" : "quick_add",
+              });
               if (context) onWelcomed(context, known);
             } else {
               setError(result.error);

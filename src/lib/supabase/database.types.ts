@@ -55,6 +55,33 @@ export type Database = {
         }
         Relationships: []
       }
+      arrival_events: {
+        Row: {
+          duration_ms: number | null
+          event_date: string
+          event_type: string
+          id: string
+          input_method: string | null
+          occurred_at: string
+        }
+        Insert: {
+          duration_ms?: number | null
+          event_date?: string
+          event_type: string
+          id?: string
+          input_method?: string | null
+          occurred_at?: string
+        }
+        Update: {
+          duration_ms?: number | null
+          event_date?: string
+          event_type?: string
+          id?: string
+          input_method?: string | null
+          occurred_at?: string
+        }
+        Relationships: []
+      }
       audience_rules: {
         Row: {
           accepts_days: boolean
@@ -3685,6 +3712,18 @@ export type Database = {
       }
     }
     Views: {
+      arrival_daily: {
+        Row: {
+          abandoned_searches: number | null
+          arrivals: number | null
+          duplicates_prevented: number | null
+          event_date: string | null
+          median_arrival_ms: number | null
+          quick_adds: number | null
+          retries: number | null
+        }
+        Relationships: []
+      }
       arrivals_today: {
         Row: {
           greeting_name: string | null
@@ -3836,6 +3875,7 @@ export type Database = {
         Returns: string
       }
       arrival_context: { Args: { target_person_id: string }; Returns: Json }
+      arrival_metrics: { Args: { period_days?: number }; Returns: Json }
       audience_rule_members: {
         Args: {
           days?: number
@@ -4091,6 +4131,14 @@ export type Database = {
           target_person_id: string
         }
         Returns: Json
+      }
+      record_arrival_event: {
+        Args: {
+          p_duration_ms?: number
+          p_event_type: string
+          p_input_method?: string
+        }
+        Returns: undefined
       }
       record_event_attendance: {
         Args: {
