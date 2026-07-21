@@ -92,3 +92,59 @@ one.
 | Import pipeline in production | verified, zero residue |
 | Data intact vs backup | every table unchanged |
 | Synthetic data in production | none |
+
+## v1.1.0 — 21 July 2026
+
+**Commit:** `5b14d53` (branch `staging`)
+**Deployment:** https://the11thbean-3eph3u21e-shishirbs2026.vercel.app
+**Rolls back to:** https://the11thbean-qxcn62lfy-shishirbs2026.vercel.app (v1.0.0)
+
+### What was promoted
+
+**Arrival** — the counter interaction that recognises a guest in one move.
+
+- Live search with no page navigation, debounced
+- Enter welcomes the top match; a scanned id resolves straight to the guest
+- Inline welcome card, allergy-first, with the next best action
+- Quick-add a new guest from a name and one contact detail
+- Duplicate-proof, loss-proof on a dropped connection
+
+### Migrations applied
+
+Two, purely additive, no `drop` statements.
+
+| Migration | Adds |
+| --- | --- |
+| `202607202100_arrival` | `arrival_context()`, `record_arrival()`, `quick_add_guest()`, `arrivals_today` view |
+| `202607202200_first_visit_at_counter` | first-visit flag correct at the moment of arrival |
+
+Applied through the Management API query endpoint (the CLI push hung on a
+keychain prompt) and recorded in `supabase_migrations.schema_migrations`.
+Production history: latest `202607202200`.
+
+### Backup
+
+```
+/Users/shishir/crm-backups/production-20260721-094705-pre-v1.1.0
+```
+
+26 tables, 150 rows, verified parseable. Restore method in the v1.0.0 entry.
+
+### Rollback
+
+```bash
+vercel rollback https://the11thbean-qxcn62lfy-shishirbs2026.vercel.app
+npm run test:smoke
+```
+
+Database needs no rollback: both migrations are additive.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| Pre-production gate | passed in 142s |
+| E2E hosted staging | 66 passed |
+| Production smoke | 63 passed |
+| Arrival in production (read-only) | card returns, no data written |
+| Data intact vs backup | every table unchanged |
