@@ -26,6 +26,9 @@
     "test:smoke": "playwright test --config=playwright.production.config.ts",
     "test:report": "playwright show-report",
     "verify:staging": "bash ./scripts/verify-staging.sh",
+    "verify:pos:staging": "bash ./scripts/verify-pos-staging.sh",
+    "release:pos:staging": "bash ./scripts/release-pos-staging.sh",
+    "release:pos:production": "bash ./scripts/release-pos-production.sh",
     "types:generate": "supabase gen types typescript --local > src/lib/supabase/database.types.ts",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop"

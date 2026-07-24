@@ -1,0 +1,26 @@
+{
+  "name": "The 11th Bean — Fallback POS",
+  "short_name": "Bean POS",
+  "description": "Backup point-of-sale register for The 11th Bean. Works offline when the primary POS is down.",
+  "start_url": "/pos",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1c1917",
+  "theme_color": "#1c1917",
+  "categories": ["business", "food"],
+  "icons": [
+    {
+      "src": "/icons/pos-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/pos-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

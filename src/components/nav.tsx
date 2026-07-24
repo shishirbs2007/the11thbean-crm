@@ -4,6 +4,7 @@ import { NavMenu } from "@/components/nav-menu";
 
 const primary = [
   ["/arrival", "Arrival"],
+  ["/pos", "POS"],
   ["/briefing", "Today"],
   ["/dashboard", "Dashboard"],
   ["/search", "Search"],
