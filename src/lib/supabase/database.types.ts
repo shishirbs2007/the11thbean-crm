@@ -3176,6 +3176,249 @@ export type Database = {
           },
         ]
       }
+      pos_menu_categories: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pos_menu_items: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          metadata: Json
+          name: string
+          price: number
+          sku: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          metadata?: Json
+          name: string
+          price?: number
+          sku?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          metadata?: Json
+          name?: string
+          price?: number
+          sku?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_menu_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "pos_menu_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_order_lines: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          item_name: string
+          line_total: number
+          menu_item_id: string | null
+          modifiers: Json
+          order_id: string
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          item_name: string
+          line_total?: number
+          menu_item_id?: string | null
+          modifiers?: Json
+          order_id: string
+          quantity?: number
+          unit_price?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          item_name?: string
+          line_total?: number
+          menu_item_id?: string | null
+          modifiers?: Json
+          order_id?: string
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_order_lines_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "pos_menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_order_lines_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "pos_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_orders: {
+        Row: {
+          amount_tendered: number | null
+          change_due: number | null
+          client_order_id: string
+          created_at: string
+          created_by: string | null
+          customer_name: string | null
+          discount_amount: number
+          id: string
+          notes: string | null
+          order_number: number
+          outlet_id: string | null
+          payment_method: string | null
+          person_id: string | null
+          placed_at: string
+          source: string
+          status: Database["public"]["Enums"]["pos_order_status"]
+          subtotal: number
+          tax_amount: number
+          total: number
+        }
+        Insert: {
+          amount_tendered?: number | null
+          change_due?: number | null
+          client_order_id: string
+          created_at?: string
+          created_by?: string | null
+          customer_name?: string | null
+          discount_amount?: number
+          id?: string
+          notes?: string | null
+          order_number?: number
+          outlet_id?: string | null
+          payment_method?: string | null
+          person_id?: string | null
+          placed_at?: string
+          source?: string
+          status?: Database["public"]["Enums"]["pos_order_status"]
+          subtotal?: number
+          tax_amount?: number
+          total?: number
+        }
+        Update: {
+          amount_tendered?: number | null
+          change_due?: number | null
+          client_order_id?: string
+          created_at?: string
+          created_by?: string | null
+          customer_name?: string | null
+          discount_amount?: number
+          id?: string
+          notes?: string | null
+          order_number?: number
+          outlet_id?: string | null
+          payment_method?: string | null
+          person_id?: string | null
+          placed_at?: string
+          source?: string
+          status?: Database["public"]["Enums"]["pos_order_status"]
+          subtotal?: number
+          tax_amount?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_orders_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_payments: {
+        Row: {
+          amount: number
+          amount_tendered: number | null
+          change_due: number | null
+          created_at: string
+          id: string
+          method: string
+          order_id: string
+          reference: string | null
+        }
+        Insert: {
+          amount?: number
+          amount_tendered?: number | null
+          change_due?: number | null
+          created_at?: string
+          id?: string
+          method?: string
+          order_id: string
+          reference?: string | null
+        }
+        Update: {
+          amount?: number
+          amount_tendered?: number | null
+          change_due?: number | null
+          created_at?: string
+          id?: string
+          method?: string
+          order_id?: string
+          reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "pos_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recommendation_types: {
         Row: {
           category: string
@@ -4063,6 +4306,7 @@ export type Database = {
       }
       next_best_action: { Args: { target_person_id: string }; Returns: Json }
       platform_overview: { Args: never; Returns: Json }
+      pos_checkout: { Args: { payload: Json }; Returns: Json }
       quick_add_guest: {
         Args: {
           contact_email?: string
@@ -4155,6 +4399,7 @@ export type Database = {
         | "no_show"
       note_visibility: "barista" | "manager" | "private"
       person_type: "customer" | "staff" | "partner" | "vendor" | "other"
+      pos_order_status: "open" | "completed" | "voided"
       sync_status: "started" | "succeeded" | "partially_succeeded" | "failed"
       timeline_source:
         | "visit"
@@ -4307,6 +4552,7 @@ export const Constants = {
       ],
       note_visibility: ["barista", "manager", "private"],
       person_type: ["customer", "staff", "partner", "vendor", "other"],
+      pos_order_status: ["open", "completed", "voided"],
       sync_status: ["started", "succeeded", "partially_succeeded", "failed"],
       timeline_source: [
         "visit",
