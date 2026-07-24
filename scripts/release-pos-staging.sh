@@ -61,8 +61,7 @@ if [ -f "$REPO_ROOT/.env.staging" ]; then
 else
   warn ".env.staging not found; relying on the current environment."
 fi
-: "${SUPABASE_ACCESS_TOKEN:?SUPABASE_ACCESS_TOKEN is required}"
-: "${STAGING_PROJECT_REF:?STAGING_PROJECT_REF is required}"
+STAGING_PROJECT_REF="${STAGING_PROJECT_REF:-mirlfxruneqcgrwpqzvp}"
 
 step "4. Fail-closed target check"
 require_valid_ref "$STAGING_PROJECT_REF"
