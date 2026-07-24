@@ -26,7 +26,7 @@ function makePayload(id: string): PosCheckoutPayload {
 
 describe("offline order queue", () => {
   beforeEach(() => {
-    localStorage.clear();
+    window.localStorage.clear();
   });
 
   it("starts empty", () => {
@@ -67,7 +67,7 @@ describe("offline order queue", () => {
   });
 
   it("survives corrupt storage without throwing", () => {
-    localStorage.setItem("bean-pos-queue-v1", "{not json");
+    window.localStorage.setItem("bean-pos-queue-v1", "{not json");
     expect(readQueue()).toEqual([]);
   });
 });

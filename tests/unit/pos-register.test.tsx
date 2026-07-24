@@ -38,7 +38,7 @@ function addBrownie() {
 }
 
 beforeEach(() => {
-  localStorage.clear();
+  window.localStorage.clear();
   submitMock.mockReset();
 });
 
