@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="The 11th Bean POS">
+  <rect width="512" height="512" rx="96" fill="#1c1917"/>
+  <g fill="none" stroke="#f5f5f4" stroke-width="20" stroke-linecap="round">
+    <path d="M150 210h150a40 40 0 0 1 40 40v0a40 40 0 0 1-40 40H150z"/>
+    <path d="M300 232h34a30 30 0 0 1 0 60h-34"/>
+    <path d="M170 150c14 12 14 24 0 36M215 150c14 12 14 24 0 36M260 150c14 12 14 24 0 36"/>
+    <path d="M150 330h190"/>
+  </g>
+  <text x="256" y="404" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="52" fill="#f5f5f4">POS</text>
+</svg>
