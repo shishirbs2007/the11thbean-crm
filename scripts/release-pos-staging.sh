@@ -73,7 +73,7 @@ log "Target: $PROJECT_NAME ($STAGING_PROJECT_REF)"
 export CRM_ENVIRONMENT=staging
 
 step "5. Local validation gate"
-npm run --silent test:guards
+env -u CRM_ENVIRONMENT npm run --silent test:guards
 npm run --silent lint;      log "lint ok"
 npm run --silent typecheck; log "typecheck ok"
 npm run --silent test:unit
