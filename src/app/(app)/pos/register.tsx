@@ -26,14 +26,55 @@ type CartLine = {
   quantity: number;
 };
 
+type ReceiptItem = {
+  item_name: string;
+  quantity: number;
+  unit_price: number;
+};
+
 type Receipt = {
   order_number: number | null;
+  reference: string;
+  placed_at: string;
+  items: ReceiptItem[];
+  subtotal: number;
+  discount: number;
   total: number;
+  payment_method: string;
   change_due: number | null;
   synced: boolean;
 };
 
 const PAYMENT_METHODS = ["cash", "card", "upi"] as const;
+
+// Plain-text receipt for Android's native share sheet (WhatsApp/SMS/email/etc.)
+// and the copy fallback. Kept deliberately simple — text only, no formatting.
+function buildReceiptText(r: Receipt): string {
+  const lines: string[] = [];
+  lines.push("The 11th Bean");
+  lines.push(new Date(r.placed_at).toLocaleString("en-IN"));
+  lines.push(
+    r.order_number !== null ? `Order #${r.order_number}` : `Ref ${r.reference.slice(0, 8)}`,
+  );
+  lines.push("--------------------------------");
+  for (const item of r.items) {
+    lines.push(
+      `${item.quantity} x ${item.item_name}  ${formatINR(item.unit_price * item.quantity)}`,
+    );
+  }
+  lines.push("--------------------------------");
+  lines.push(`Subtotal  ${formatINR(r.subtotal)}`);
+  if (r.discount > 0) lines.push(`Discount  -${formatINR(r.discount)}`);
+  lines.push(`Total     ${formatINR(r.total)}`);
+  lines.push(`Paid via  ${r.payment_method.toUpperCase()}`);
+  if (r.change_due !== null && r.change_due > 0) {
+    lines.push(`Change    ${formatINR(r.change_due)}`);
+  }
+  if (!r.synced) lines.push("(offline — will sync to records)");
+  lines.push("");
+  lines.push("Thank you!");
+  return lines.join("\n");
+}
 
 function subscribeOnline(callback: () => void) {
   window.addEventListener("online", callback);
@@ -77,6 +118,7 @@ export function Register({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
+  const [shareState, setShareState] = useState<"idle" | "copied">("idle");
   const [pendingCount, setPendingCount] = useState(0);
 
   const online = useSyncExternalStore(
@@ -236,6 +278,7 @@ export function Register({
       quantity: l.quantity,
     }));
 
+    const placedAt = new Date().toISOString();
     const payload: PosCheckoutPayload = {
       client_order_id: newClientOrderId(),
       person_id: customer?.id ?? null,
@@ -245,14 +288,32 @@ export function Register({
       amount_tendered:
         paymentMethod === "cash" && tenderedValue !== null ? tenderedValue : null,
       discount_amount: discountValue,
-      placed_at: new Date().toISOString(),
+      placed_at: placedAt,
       lines: payloadLines,
     };
+
+    // Snapshot everything the receipt needs before the cart is reset.
+    const receiptBase = {
+      reference: payload.client_order_id,
+      placed_at: placedAt,
+      items: payloadLines.map((l) => ({
+        item_name: l.item_name,
+        quantity: l.quantity,
+        unit_price: l.unit_price,
+      })),
+      subtotal,
+      discount: discountValue,
+      total,
+      payment_method: paymentMethod,
+    };
+
+    setShareState("idle");
 
     try {
       const result = await submitPosOrder(payload);
       if (result.ok) {
         setReceipt({
+          ...receiptBase,
           order_number: result.order_number,
           total: result.total ?? total,
           change_due: result.change_due ?? change,
@@ -267,14 +328,58 @@ export function Register({
       enqueueOrder(payload);
       refreshPending();
       setReceipt({
+        ...receiptBase,
         order_number: null,
-        total,
         change_due: change,
         synced: false,
       });
       resetSale();
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function shareReceipt() {
+    if (!receipt) return;
+    const text = buildReceiptText(receipt);
+    const title = `The 11th Bean receipt${
+      receipt.order_number !== null ? ` #${receipt.order_number}` : ""
+    }`;
+
+    const nav = typeof navigator !== "undefined" ? navigator : undefined;
+    if (nav && typeof nav.share === "function") {
+      try {
+        await nav.share({ title, text });
+        return;
+      } catch (err) {
+        // User dismissed the share sheet — do nothing further.
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        // Otherwise fall through to the copy fallback.
+      }
+    }
+    await copyReceipt();
+  }
+
+  async function copyReceipt() {
+    if (!receipt) return;
+    const text = buildReceiptText(receipt);
+    try {
+      const nav = typeof navigator !== "undefined" ? navigator : undefined;
+      if (nav?.clipboard?.writeText) {
+        await nav.clipboard.writeText(text);
+      } else if (typeof document !== "undefined") {
+        const area = document.createElement("textarea");
+        area.value = text;
+        area.style.position = "fixed";
+        area.style.opacity = "0";
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand("copy");
+        document.body.removeChild(area);
+      }
+      setShareState("copied");
+    } catch {
+      // Clipboard unavailable; nothing more we can safely do.
     }
   }
 
@@ -327,12 +432,26 @@ export function Register({
                 {receipt.synced ? "" : " · will sync when back online"}
               </p>
             </div>
-            <button
-              onClick={() => setReceipt(null)}
-              className="rounded-xl bg-green-700 px-4 py-2 text-sm text-white"
-            >
-              New order
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={shareReceipt}
+                className="rounded-xl border border-green-700 px-4 py-2 text-sm text-green-800"
+              >
+                Share receipt
+              </button>
+              <button
+                onClick={copyReceipt}
+                className="rounded-xl border border-green-700 px-4 py-2 text-sm text-green-800"
+              >
+                {shareState === "copied" ? "Copied ✓" : "Copy"}
+              </button>
+              <button
+                onClick={() => setReceipt(null)}
+                className="rounded-xl bg-green-700 px-4 py-2 text-sm text-white"
+              >
+                New order
+              </button>
+            </div>
           </div>
         </div>
       )}
