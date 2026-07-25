@@ -1,0 +1,14 @@
+{
+  "name": "@the11thbean/petpooja-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local bridge that runs on the cafe machine and mediates read-only access between the cloud CRM and the on-premise PetPooja service. Isolated from the Next.js web app.",
+  "engines": {
+    "node": ">=22.6.0"
+  },
+  "scripts": {
+    "start": "node --experimental-strip-types src/server.ts",
+    "probe": "node --experimental-strip-types src/probe.ts"
+  }
+}
