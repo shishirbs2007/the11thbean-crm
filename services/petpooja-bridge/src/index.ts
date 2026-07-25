@@ -33,3 +33,28 @@ export {
   parseResponse,
   extractRestaurantIdentity,
 } from "./petpooja/protocol.ts";
+export {
+  getOrders,
+  fetchOrdersPage,
+  dedupeOrders,
+  buildSearchObject,
+  buildOrderListingBody,
+  assertReadOnlyEndpoint,
+  READ_ONLY_INTRANET_ENDPOINTS,
+  ORDER_LISTING_ROUTE,
+} from "./petpooja/orders.ts";
+export {
+  normalizeOrder,
+  normalizeItem,
+  normalizePayment,
+  extractOrderArray,
+  extractTotalRecords,
+} from "./petpooja/normalize.ts";
+export type {
+  NormalizedOrder,
+  NormalizedItem,
+  NormalizedPayment,
+  NormalizedKot,
+  OrderPage,
+  OrdersResult,
+} from "./petpooja/order-types.ts";

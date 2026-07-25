@@ -46,6 +46,9 @@ export const PETPOOJA_ROUTE_BASE = "/petpooja_server";
 export const KNOWN_ENDPOINTS = {
   checkSyncCode: "check_sync_code",
   innerItemListing: "inner_item_listing",
+  // Proven live (POST /intranet_api/inner_order_listing) — returns full order,
+  // invoice, customer, item, tax, discount and payment data.
+  innerOrderListing: "inner_order_listing",
 } as const;
 
 export const CAPABILITY_CATALOG: readonly CapabilityDescriptor[] = [
@@ -81,10 +84,11 @@ export const CAPABILITY_CATALOG: readonly CapabilityDescriptor[] = [
   },
   {
     key: "order.read",
-    endpoint: null,
-    category: "C",
-    support: "unknown",
-    notes: "Endpoint unknown. Discover via the probe on the cafe machine.",
+    endpoint: KNOWN_ENDPOINTS.innerOrderListing,
+    category: "B",
+    support: "discovered",
+    notes:
+      "Proven live via /intranet_api/inner_order_listing (paginated date-range listing). Validate end to end with `npm run petpooja:orders`.",
   },
   {
     key: "order.create",
@@ -95,17 +99,19 @@ export const CAPABILITY_CATALOG: readonly CapabilityDescriptor[] = [
   },
   {
     key: "bill.read",
-    endpoint: null,
-    category: "C",
-    support: "unknown",
-    notes: "Endpoint unknown. Discover via the probe on the cafe machine.",
+    endpoint: KNOWN_ENDPOINTS.innerOrderListing,
+    category: "B",
+    support: "discovered",
+    notes:
+      "Invoice/bill fields are carried in the inner_order_listing response; extracted by the order normalizer. Not yet validated as a standalone endpoint.",
   },
   {
     key: "payment.read",
-    endpoint: null,
-    category: "C",
-    support: "unknown",
-    notes: "Endpoint unknown. Discover via the probe on the cafe machine.",
+    endpoint: KNOWN_ENDPOINTS.innerOrderListing,
+    category: "B",
+    support: "discovered",
+    notes:
+      "Payment fields are carried in the inner_order_listing response; extracted by the order normalizer.",
   },
   {
     key: "printing",

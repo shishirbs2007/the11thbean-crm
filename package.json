@@ -28,6 +28,7 @@
     "verify:staging": "bash ./scripts/verify-staging.sh",
     "petpooja:setup": "cp -n services/petpooja-bridge/.env.example services/petpooja-bridge/.env 2>/dev/null || true",
     "petpooja:probe": "node --env-file-if-exists=services/petpooja-bridge/.env --experimental-strip-types services/petpooja-bridge/src/probe.ts",
+    "petpooja:orders": "node --env-file-if-exists=services/petpooja-bridge/.env --experimental-strip-types services/petpooja-bridge/src/orders-cli.ts",
     "petpooja:bridge": "node --env-file-if-exists=services/petpooja-bridge/.env --experimental-strip-types services/petpooja-bridge/src/server.ts",
     "petpooja:typecheck": "tsc -p services/petpooja-bridge/tsconfig.json",
     "petpooja:test": "vitest run --config services/petpooja-bridge/vitest.config.ts",

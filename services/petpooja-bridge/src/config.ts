@@ -8,8 +8,14 @@ export type AuthKey = { keyId: string; secret: string };
 
 export type BridgeConfig = {
   petpoojaBaseUrl: string;
+  // The intranet API base (order/customer listing). Proven at :9080 with the
+  // /intranet_api/* routes; distinct from the /petpooja_server/* base above.
+  petpoojaIntranetUrl: string;
   syncCode: string | null;
   serverVersion: string | null;
+  // Order-listing request context (sensitive — never logged or committed).
+  restId: string | null;
+  user: string | null;
   port: number;
   host: string;
   authKeys: AuthKey[];
@@ -20,6 +26,7 @@ export type BridgeConfig = {
 
 const DEFAULTS = {
   petpoojaBaseUrl: "http://127.0.0.1:8965",
+  petpoojaIntranetUrl: "http://127.0.0.1:9080",
   port: 8787,
   host: "127.0.0.1",
   maxClockSkewMs: 300_000,
@@ -62,8 +69,13 @@ export function loadConfig(
       /\/$/,
       "",
     ),
+    petpoojaIntranetUrl: (
+      env.PETPOOJA_INTRANET_URL || DEFAULTS.petpoojaIntranetUrl
+    ).replace(/\/$/, ""),
     syncCode: env.PETPOOJA_SYNC_CODE ? env.PETPOOJA_SYNC_CODE : null,
     serverVersion: env.PETPOOJA_SERVER_VERSION ? env.PETPOOJA_SERVER_VERSION : null,
+    restId: env.PETPOOJA_REST_ID ? env.PETPOOJA_REST_ID : null,
+    user: env.PETPOOJA_USER ? env.PETPOOJA_USER : null,
     port: num(env.BRIDGE_PORT, DEFAULTS.port),
     host: env.BRIDGE_HOST || DEFAULTS.host,
     authKeys: parseAuthKeys(env.BRIDGE_AUTH_KEYS),
@@ -78,6 +90,7 @@ export function loadConfig(
 export function secretsOf(config: BridgeConfig): string[] {
   const secrets: string[] = [];
   if (config.syncCode) secrets.push(config.syncCode);
+  if (config.user) secrets.push(config.user);
   for (const key of config.authKeys) secrets.push(key.secret);
   return secrets;
 }
