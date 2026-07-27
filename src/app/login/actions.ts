@@ -1,37 +1,39 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 
-export async function sendMagicLink(formData: FormData) {
-  const email = String(formData.get("email") || "").trim().toLowerCase();
+export async function verifyPin(formData: FormData) {
+  const pin = String(formData.get("pin") || "").trim();
 
-  if (!email) {
-    redirect("/login?error=Enter%20an%20email%20address");
+  const roles: Record<string, string> = {
+    "0000": "admin",
+    "1111": "manager",
+    "2222": "barista",
+  };
+
+  const role = roles[pin];
+
+  if (!role) {
+    redirect("/login?error=Incorrect%20PIN");
   }
 
-  const requestHeaders = await headers();
-  const forwardedHost = requestHeaders.get("x-forwarded-host");
-  const host = forwardedHost || requestHeaders.get("host");
-  const protocol =
-    requestHeaders.get("x-forwarded-proto") ||
-    (host?.includes("localhost") ? "http" : "https");
+  const cookieStore = await cookies();
 
-  const siteUrl = `${protocol}://${host}`;
-
-  const supabase = await createClient();
-
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: `${siteUrl}/auth/callback`,
-    },
+  cookieStore.set("bean_role", role, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 12,
   });
 
-  if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`);
-  }
+  redirect("/dashboard");
+}
 
-  redirect("/login?sent=1");
+export async function signOut() {
+  const cookieStore = await cookies();
+  cookieStore.delete("bean_role");
+  cookieStore.delete("bean_store");
+  redirect("/login");
 }
