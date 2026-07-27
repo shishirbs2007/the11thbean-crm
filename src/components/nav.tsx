@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { getRole } from "@/lib/auth";
+import { signOut } from "@/app/login/actions";
 
 const links = [
   ["/dashboard", "Dashboard"],
@@ -13,9 +14,14 @@ const links = [
   ["/settings", "Settings"],
 ];
 
+const labels = {
+  admin: "Management",
+  manager: "Manager",
+  barista: "Barista",
+} as const;
+
 export async function Nav() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const role = await getRole();
 
   return (
     <header className="border-b">
@@ -30,7 +36,12 @@ export async function Nav() {
             </Link>
           ))}
         </nav>
-        <span className="text-xs text-neutral-500">{user?.email}</span>
+        <div className="flex items-center gap-3">
+          {role && <span className="text-xs font-medium">{labels[role]}</span>}
+          <form action={signOut}>
+            <button className="text-xs text-neutral-500 hover:underline">Sign out</button>
+          </form>
+        </div>
       </div>
     </header>
   );
